@@ -1,0 +1,21 @@
+{
+  "name": "@kracken/shared-db",
+  "version": "2.0.0",
+  "description": "Shared database utilities and migrations for Kracken messenger",
+  "main": "index.js",
+  "scripts": {
+    "db:init": "node scripts/init-db.js",
+    "db:migrate": "node scripts/migrate-db.js",
+    "db:reset": "node scripts/reset-db.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "pg": "^8.16.3"
+  },
+  "keywords": [
+    "database",
+    "postgresql",
+    "migrations"
+  ],
+  "license": "ISC"
+}

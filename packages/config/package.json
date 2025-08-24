@@ -1,0 +1,17 @@
+{
+  "name": "@kracken/config",
+  "version": "2.0.0",
+  "description": "Shared configuration constants and utilities for Kracken messenger",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "config",
+    "constants",
+    "utilities",
+    "shared"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@kracken/shared-ui",
+  "version": "2.0.0",
+  "description": "Shared UI components and styles for Kracken messenger",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'UI build not implemented yet'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ui",
+    "styles",
+    "components",
+    "shared"
+  ],
+  "author": "",
+  "license": "ISC"
+}

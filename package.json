@@ -1,0 +1,52 @@
+{
+  "name": "kracken",
+  "version": "2.0.0",
+  "description": "A modern cross-platform messenger built with Node.js, Express, Socket.IO, and Electron",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=@kracken/web",
+    "dev:desktop": "npm run dev --workspace=@kracken/desktop",
+    "dev:server": "npm run dev --workspace=@kracken/server",
+    "dev:full": "concurrently \"npm:dev:server\" \"npm:dev:web\"",
+    "start:web": "npm run start --workspace=@kracken/web",
+    "start:server": "npm run start --workspace=@kracken/server",
+    "start:desktop": "npm run start --workspace=@kracken/desktop",
+    "build:web": "npm run build --workspace=@kracken/web",
+    "build:desktop": "npm run build --workspace=@kracken/desktop",
+    "build:desktop:win": "npm run build:win --workspace=@kracken/desktop",
+    "build:desktop:linux": "npm run build:linux --workspace=@kracken/desktop",
+    "db:init": "npm run db:init --workspace=@kracken/shared-db",
+    "db:migrate": "npm run db:migrate --workspace=@kracken/shared-db",
+    "db:reset": "npm run db:reset --workspace=@kracken/shared-db",
+    "install:all": "npm install",
+    "clean": "npm run clean --workspaces --if-present",
+    "lint": "echo \"Linting not configured yet\"",
+    "test": "echo \"Tests not configured yet\"",
+    "setup": "echo \"Setting up workspaces...\" && npm install --workspaces"
+  },
+  "keywords": [
+    "messenger",
+    "chat",
+    "socket.io",
+    "express",
+    "postgresql",
+    "electron",
+    "cross-platform",
+    "monorepo"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@kracken/web",
+  "version": "2.0.0",
+  "description": "Kracken messenger web application",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "npm run serve",
+    "dev": "npm run serve",
+    "serve": "http-server public -p 3001 -c-1",
+    "build": "echo 'Web build not implemented yet'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "messenger",
+    "chat",
+    "web",
+    "socket.io"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@kracken/shared-ui": "*",
+    "@kracken/shared-types": "*",
+    "@kracken/config": "*"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}

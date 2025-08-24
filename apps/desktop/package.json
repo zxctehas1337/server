@@ -1,0 +1,79 @@
+{
+  "name": "@kracken/desktop",
+  "version": "2.0.0",
+  "description": "Kracken messenger desktop application",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development electron . --enable-logging",
+    "desktop": "cross-env NODE_ENV=development concurrently \"npm run server\" \"npm:dev\"",
+    "server": "cd ../server && npm run dev",
+    "build": "electron-builder --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:linux": "electron-builder --linux --publish never",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "messenger",
+    "chat",
+    "electron",
+    "desktop"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@kracken/shared-ui": "*",
+    "@kracken/shared-types": "*",
+    "@kracken/config": "*"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "electron": "^37.3.1",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.kracken.messenger",
+    "productName": "Kracken Messenger",
+    "files": [
+      "electron/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "resources",
+      "output": "dist"
+    },
+    "asar": false,
+    "linux": {
+      "target": [{
+        "target": "AppImage",
+        "arch": ["x64"]
+      }],
+      "category": "Network",
+      "icon": "resources/icons/linux/icon.png",
+      "desktop": {
+        "entry": {
+          "Name": "Kracken Messenger",
+          "Comment": "Modern real-time chat application",
+          "Categories": "Network;InstantMessaging;Chat;"
+        }
+      }
+    },
+    "win": {
+      "target": [{
+        "target": "nsis",
+        "arch": ["x64"]
+      }],
+      "icon": "resources/icons/win/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "resources/icons/win/icon.ico",
+      "uninstallerIcon": "resources/icons/win/icon.ico"
+    }
+  }
+}

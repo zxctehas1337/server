@@ -1,0 +1,22 @@
+{
+  "name": "@kracken/shared-types",
+  "version": "2.0.0",
+  "description": "Shared TypeScript types and interfaces for Kracken messenger",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "types",
+    "typescript",
+    "interfaces",
+    "shared"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
