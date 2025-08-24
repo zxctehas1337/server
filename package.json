@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "npm run start:server",
     "dev:web": "npm run dev --workspace=@kracken/web",
     "dev:desktop": "npm run dev --workspace=@kracken/desktop",
     "dev:server": "npm run dev --workspace=@kracken/server",

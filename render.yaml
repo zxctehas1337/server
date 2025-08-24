@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kracken-server
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node apps/server/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    # Add your environment variables here
+    # - key: DATABASE_URL
+    #   sync: false  # Set to true if you want to sync from Render dashboard

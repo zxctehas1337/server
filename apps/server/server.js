@@ -25,7 +25,6 @@ pool.connect((err, client, release) => {
 });
 
 // Middleware
-app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // Store connected users
@@ -47,9 +46,18 @@ function broadcastOnlineUsers() {
     io.emit('online_users', onlineUsers);
 }
 
-// Serve main page
+// API info endpoint
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.json({
+        message: 'Kracken Messenger Backend API',
+        version: '2.0.0',
+        status: 'online',
+        endpoints: {
+            socketio: 'Connect via Socket.IO for real-time messaging',
+            events: ['set_username', 'join_room', 'send_message', 'new_message', 'online_users']
+        },
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Socket.IO connection handling
