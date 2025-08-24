@@ -1,5 +1,19 @@
-// Socket.IO client connection
-const socket = io();
+// Socket.IO client connection with Firefox compatibility options
+const socket = io({
+  // Force WebSocket transport for consistency across browsers
+  transports: ['websocket', 'polling'],
+  // Increase timeout for Firefox
+  timeout: 20000,
+  // Enable debugging
+  debug: true,
+  // Ensure proper reconnection
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  maxReconnectionAttempts: 3,
+  // Force JSON protocol
+  forceJSONP: false
+});
 
 // DOM Elements
 const loginContainer = document.getElementById('loginContainer');
@@ -87,6 +101,43 @@ function updateThemeIcon() {
   if (themeIcon) {
     themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
   }
+}
+
+// Reset functions
+function resetToLogin() {
+  console.log('Resetting to login state');
+  
+  // Clear user state
+  currentUser = null;
+  isConnected = false;
+  onlineUsers.clear();
+  
+  // Reset UI
+  loginContainer.style.display = 'flex';
+  chatContainer.style.display = 'none';
+  
+  // Clear forms and messages
+  usernameInput.value = '';
+  passwordInput.value = '';
+  messageInput.value = '';
+  messagesDiv.innerHTML = '';
+  onlineUsersList.innerHTML = '';
+  
+  // Reset button states
+  const submitButton = loginForm.querySelector('button');
+  const sendButton = messageForm.querySelector('.send-btn');
+  if (submitButton) {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Join Chat';
+  }
+  if (sendButton) {
+    sendButton.disabled = false;
+  }
+  
+  // Focus username input
+  usernameInput.focus();
+  
+  showStatus('Connection lost. Please login again.', 'error');
 }
 
 // Utility Functions
@@ -262,10 +313,27 @@ socket.on('connect', () => {
   isConnected = true;
 });
 
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
+socket.on('disconnect', (reason) => {
+  console.log('Disconnected from server. Reason:', reason);
   isConnected = false;
-  showStatus('Disconnected from server', 'error');
+  
+  // Check if this is an unexpected disconnect (not user-initiated)
+  if (reason === 'io server disconnect' || reason === 'transport close') {
+    showStatus('Connection lost. Reconnecting...', 'error');
+    
+    // If user is logged in, show them they've been disconnected
+    if (currentUser) {
+      // Reset UI to login state after a delay to allow for reconnection
+      setTimeout(() => {
+        if (!socket.connected) {
+          console.log('Firefox disconnect detected, resetting to login');
+          resetToLogin();
+        }
+      }, 3000);
+    }
+  } else {
+    showStatus('Disconnected from server', 'error');
+  }
 });
 
 socket.on('username_set', (data) => {
@@ -412,18 +480,41 @@ messageForm.addEventListener('submit', (e) => {
     return;
   }
   
+  // Debug logging for Firefox
+  console.log('Sending message:', {
+    content,
+    roomId: currentRoom.id,
+    roomType: currentRoom.type,
+    browser: navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Other',
+    socketConnected: socket.connected,
+    currentUser: currentUser?.username
+  });
+  
   // Disable send button while processing
   const sendButton = messageForm.querySelector('.send-btn');
   sendButton.disabled = true;
   
-  socket.emit('send_message', { 
-    content, 
-    roomId: currentRoom.id,
-    roomType: currentRoom.type
-  });
+  // Store original values in case we need to restore them
+  const originalValue = messageInput.value;
   
-  // Clear input and re-enable button
-  messageInput.value = '';
+  try {
+    socket.emit('send_message', { 
+      content, 
+      roomId: currentRoom.id,
+      roomType: currentRoom.type
+    });
+    
+    // Clear input only after successful emit
+    messageInput.value = '';
+    
+  } catch (error) {
+    console.error('Error sending message:', error);
+    showStatus('Failed to send message', 'error');
+    // Restore original value on error
+    messageInput.value = originalValue;
+  }
+  
+  // Re-enable button after delay
   setTimeout(() => {
     sendButton.disabled = false;
     messageInput.focus();
