@@ -252,6 +252,8 @@ function startPrivateChat(user) {
   // Create or switch to private chat
   const chatId = `private_${Math.min(currentUser.id, user.id)}_${Math.max(currentUser.id, user.id)}`;
   
+  console.log('Starting private chat with:', user.username, 'chatId:', chatId);
+  
   // Check if chat already exists
   let existingChat = document.querySelector(`[data-room-id="${chatId}"]`);
   
@@ -283,6 +285,7 @@ function startPrivateChat(user) {
     }));
     
     chatList.appendChild(chatItem);
+    console.log('Created new chat item for', user.username);
   }
   
   // Switch to this chat
@@ -292,6 +295,8 @@ function startPrivateChat(user) {
     type: 'private',
     userId: user.id
   });
+  
+  showStatus(`Started private chat with ${user.username}`, 'success');
 }
 
 function switchChat(room) {
@@ -411,6 +416,11 @@ socket.on('user_left', (data) => {
 
 socket.on('online_users', (users) => {
   updateOnlineUsers(users);
+  
+  // Update suggested users in new chat modal if it's open
+  if (newChatModal && newChatModal.classList.contains('show')) {
+    updateSuggestedUsers();
+  }
 });
 
 socket.on('room_joined', (data) => {
@@ -536,19 +546,107 @@ messageForm.addEventListener('submit', (e) => {
 // Theme toggle event handler
 themeToggle.addEventListener('click', toggleTheme);
 
-// New chat button handler
-newChatBtn.addEventListener('click', () => {
-  // For now, just show a simple prompt
-  const username = prompt('Enter username to start a private chat:');
-  if (username && username.trim()) {
-    const user = Array.from(onlineUsers.values()).find(u => 
-      u.username.toLowerCase() === username.trim().toLowerCase()
-    );
-    if (user) {
+// New chat modal elements
+const newChatModal = document.getElementById('newChatModal');
+const newChatUsername = document.getElementById('newChatUsername');
+const newChatCloseBtn = document.getElementById('newChatCloseBtn');
+const newChatCancelBtn = document.getElementById('newChatCancelBtn');
+const newChatStartBtn = document.getElementById('newChatStartBtn');
+const suggestedUsers = document.getElementById('suggestedUsers');
+
+// New chat modal functions
+function showNewChatModal() {
+  // Update suggested users list
+  updateSuggestedUsers();
+  
+  // Clear and focus input
+  newChatUsername.value = '';
+  newChatModal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+  
+  // Focus input after modal is shown
+  setTimeout(() => {
+    newChatUsername.focus();
+  }, 100);
+}
+
+function hideNewChatModal() {
+  newChatModal.classList.remove('show');
+  document.body.style.overflow = '';
+  newChatUsername.value = '';
+}
+
+function updateSuggestedUsers() {
+  suggestedUsers.innerHTML = '';
+  
+  const otherUsers = Array.from(onlineUsers.values()).filter(user => 
+    user.id !== currentUser?.id
+  );
+  
+  if (otherUsers.length === 0) {
+    suggestedUsers.innerHTML = '<p class="no-users">No other users online</p>';
+    return;
+  }
+  
+  otherUsers.forEach(user => {
+    const userItem = document.createElement('div');
+    userItem.className = 'suggested-user';
+    userItem.innerHTML = `
+      <div class="user-avatar">${getAvatarInitials(user.username)}</div>
+      <span class="user-name">${escapeHtml(user.username)}</span>
+    `;
+    
+    userItem.addEventListener('click', () => {
+      hideNewChatModal();
       startPrivateChat(user);
-    } else {
-      showStatus('User not found or not online', 'error');
-    }
+    });
+    
+    suggestedUsers.appendChild(userItem);
+  });
+}
+
+function startNewChatFromModal() {
+  const username = newChatUsername.value.trim();
+  
+  if (!username) {
+    showStatus('Please enter a username', 'error');
+    newChatUsername.focus();
+    return;
+  }
+  
+  const user = Array.from(onlineUsers.values()).find(u => 
+    u.username.toLowerCase() === username.toLowerCase()
+  );
+  
+  if (user) {
+    hideNewChatModal();
+    startPrivateChat(user);
+  } else {
+    showStatus('User not found or not online', 'error');
+    newChatUsername.focus();
+  }
+}
+
+// New chat button handler
+newChatBtn.addEventListener('click', showNewChatModal);
+
+// New chat modal event listeners
+newChatCloseBtn.addEventListener('click', hideNewChatModal);
+newChatCancelBtn.addEventListener('click', hideNewChatModal);
+newChatStartBtn.addEventListener('click', startNewChatFromModal);
+
+// Handle Enter key in username input
+newChatUsername.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    startNewChatFromModal();
+  }
+});
+
+// Close modal when clicking outside
+newChatModal.addEventListener('click', (e) => {
+  if (e.target === newChatModal) {
+    hideNewChatModal();
   }
 });
 
@@ -652,8 +750,10 @@ switchChat = function(room) {
 // Handle escape key to close mobile sidebar
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    // Priority: first close invitation modal, then close mobile sidebar
-    if (currentInvite) {
+    // Priority: first close new chat modal, then invitation modal, then close mobile sidebar
+    if (newChatModal && newChatModal.classList.contains('show')) {
+      hideNewChatModal();
+    } else if (currentInvite) {
       hideInvitationModal();
     } else {
       closeMobileSidebar();

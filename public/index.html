@@ -148,6 +148,30 @@
                 </div>
             </div>
         </div>
+        
+        <!-- New Private Chat Modal -->
+        <div id="newChatModal" class="new-chat-modal">
+            <div class="new-chat-content">
+                <div class="new-chat-header">
+                    <h3>Start Private Chat</h3>
+                    <button id="newChatCloseBtn" class="close-btn">✕</button>
+                </div>
+                <div class="new-chat-body">
+                    <div class="form-group">
+                        <label for="newChatUsername">Username:</label>
+                        <input type="text" id="newChatUsername" placeholder="Enter username to chat with..." maxlength="50">
+                    </div>
+                    <div class="online-users-suggest">
+                        <p>Or click on an online user:</p>
+                        <div id="suggestedUsers" class="suggested-users"></div>
+                    </div>
+                </div>
+                <div class="new-chat-actions">
+                    <button id="newChatCancelBtn" class="btn-secondary">Cancel</button>
+                    <button id="newChatStartBtn" class="btn-primary">Start Chat</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Socket.IO Client Library -->
