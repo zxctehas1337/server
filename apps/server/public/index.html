@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kracken Messenger</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button id="mobileNavBtn" class="mobile-nav-btn" title="Toggle Menu">
+                    <span>☰</span>
+                </button>
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <h1>Kracken</h1>
+                </div>
+            </div>
+            <div class="header-right">
+                <div id="userInfo" class="user-info"></div>
+                <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Login Form (shown initially) -->
+        <div id="loginContainer" class="login-container">
+            <form id="loginForm" class="login-form">
+                <h2>Join the Chat</h2>
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required minlength="3" maxlength="50" 
+                           placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required minlength="4" 
+                           placeholder="Enter your password">
+                </div>
+                <button type="submit">Join Chat</button>
+            </form>
+        </div>
+
+        <!-- Main Chat Interface (hidden initially) -->
+        <div id="chatContainer" class="chat-container" style="display: none;">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h3>Chats</h3>
+                    <button id="newChatBtn" class="new-chat-btn" title="New Chat">+</button>
+                </div>
+                
+                <div class="chat-list">
+                    <div class="chat-item active" data-room-id="1" data-room-type="general">
+                        <div class="chat-avatar">
+                            <div class="avatar-placeholder">#</div>
+                        </div>
+                        <div class="chat-info">
+                            <div class="chat-name">General Chat</div>
+                            <div class="chat-last-message">Welcome to Kracken!</div>
+                        </div>
+                        <div class="chat-meta">
+                            <div class="unread-count" style="display: none;">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="online-users">
+                    <h4>Online Users</h4>
+                    <div id="onlineUsersList" class="users-list"></div>
+                </div>
+            </aside>
+
+            <!-- Main Chat Area -->
+            <main class="main-chat">
+                <div class="chat-header">
+                    <div class="chat-header-info">
+                        <div class="chat-header-avatar">
+                            <div class="avatar-placeholder">#</div>
+                        </div>
+                        <div class="chat-header-details">
+                            <h3 id="currentChatName">General Chat</h3>
+                            <p id="currentChatStatus">Public room</p>
+                        </div>
+                    </div>
+                    <div class="chat-header-actions">
+                        <button id="chatSettingsBtn" class="icon-btn" title="Chat Settings">⚙️</button>
+                    </div>
+                </div>
+
+                <!-- Messages Display -->
+                <div id="messagesContainer" class="messages-container">
+                    <div id="messages" class="messages"></div>
+                </div>
+
+                <!-- Message Input Form -->
+                <form id="messageForm" class="message-form">
+                    <div class="input-group">
+                        <button type="button" id="attachBtn" class="attachment-btn" title="Attach file">📎</button>
+                        <input type="text" id="messageInput" placeholder="Type your message..." 
+                               maxlength="1000" autocomplete="off">
+                        <button type="button" id="emojiBtn" class="emoji-btn" title="Emoji">😊</button>
+                        <button type="submit" id="sendBtn" class="send-btn">
+                            <span class="send-icon">➤</span>
+                        </button>
+                    </div>
+                </form>
+            </main>
+        </div>
+
+        <!-- Status/Error Messages -->
+        <div id="statusMessage" class="status-message"></div>
+        
+        <!-- Mobile Overlay -->
+        <div id="mobileOverlay" class="mobile-overlay"></div>
+        
+        <!-- Chat Invitation Modal -->
+        <div id="invitationModal" class="invitation-modal">
+            <div class="invitation-content">
+                <div class="invitation-header">
+                    <div id="invitationAvatar" class="invitation-avatar"></div>
+                    <h3 id="invitationTitle" class="invitation-title">Приглашение в приватный чат</h3>
+                    <p id="invitationMessage" class="invitation-message"></p>
+                </div>
+                <div class="invitation-actions">
+                    <button id="acceptInvitationBtn" class="invitation-btn accept">
+                        <span>✓</span> Зайти
+                    </button>
+                    <button id="declineInvitationBtn" class="invitation-btn decline">
+                        <span>✗</span> Отказаться
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invitation Notification Toast -->
+        <div id="invitationNotification" class="invitation-notification">
+            <div class="invitation-notification-content">
+                <div id="invitationNotificationAvatar" class="invitation-notification-avatar"></div>
+                <div class="invitation-notification-text">
+                    <div id="invitationNotificationTitle" class="invitation-notification-title">Новое приглашение</div>
+                    <div id="invitationNotificationMessage" class="invitation-notification-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.IO Client Library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
