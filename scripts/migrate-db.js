@@ -10,8 +10,8 @@ async function migrateDatabase() {
     try {
         console.log('Connecting to database for migration...');
         
-        // Check if messages table exists and has room_id column
-        const tableCheck = await pool.query(`
+        // Check what columns already exist
+        const messagesRoomIdCheck = await pool.query(`
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'messages' 
@@ -19,11 +19,22 @@ async function migrateDatabase() {
             AND column_name = 'room_id';
         `);
         
-        const hasRoomId = tableCheck.rows.length > 0;
-        console.log('Messages table has room_id column:', hasRoomId);
+        const usersAvatarCheck = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'users' 
+            AND table_schema = 'public'
+            AND column_name = 'avatar_url';
+        `);
         
-        if (hasRoomId) {
-            console.log('Database already migrated. No action needed.');
+        const hasRoomId = messagesRoomIdCheck.rows.length > 0;
+        const hasAvatarUrl = usersAvatarCheck.rows.length > 0;
+        
+        console.log('Messages table has room_id column:', hasRoomId);
+        console.log('Users table has avatar_url column:', hasAvatarUrl);
+        
+        if (hasRoomId && hasAvatarUrl) {
+            console.log('Database already fully migrated. No action needed.');
             return;
         }
         
@@ -57,7 +68,7 @@ async function migrateDatabase() {
             );
         `);
         
-        if (messagesTableExists.rows[0].exists) {
+        if (messagesTableExists.rows[0].exists && !hasRoomId) {
             console.log('Migrating messages table...');
             
             // Add room_id column
@@ -75,6 +86,8 @@ async function migrateDatabase() {
                 ADD CONSTRAINT fk_messages_room_id 
                 FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE;
             `);
+        } else if (hasRoomId) {
+            console.log('Messages table already has room_id column, skipping messages migration.');
         }
         
         // Create chat_room_participants table

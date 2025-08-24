@@ -8,8 +8,9 @@
     "dev": "nodemon src/server.js",
     "init-db": "node scripts/init-db.js",
     "migrate-db": "node scripts/migrate-db.js",
+    "migrate": "node scripts/migrate-db.js",
     "reset-db": "node scripts/reset-db.js",
-    "postinstall": "node scripts/init-db.js",
+    "postinstall": "node scripts/add-avatar-migration.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
