@@ -118,6 +118,36 @@
         
         <!-- Mobile Overlay -->
         <div id="mobileOverlay" class="mobile-overlay"></div>
+        
+        <!-- Chat Invitation Modal -->
+        <div id="invitationModal" class="invitation-modal">
+            <div class="invitation-content">
+                <div class="invitation-header">
+                    <div id="invitationAvatar" class="invitation-avatar"></div>
+                    <h3 id="invitationTitle" class="invitation-title">Приглашение в приватный чат</h3>
+                    <p id="invitationMessage" class="invitation-message"></p>
+                </div>
+                <div class="invitation-actions">
+                    <button id="acceptInvitationBtn" class="invitation-btn accept">
+                        <span>✓</span> Зайти
+                    </button>
+                    <button id="declineInvitationBtn" class="invitation-btn decline">
+                        <span>✗</span> Отказаться
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invitation Notification Toast -->
+        <div id="invitationNotification" class="invitation-notification">
+            <div class="invitation-notification-content">
+                <div id="invitationNotificationAvatar" class="invitation-notification-avatar"></div>
+                <div class="invitation-notification-text">
+                    <div id="invitationNotificationTitle" class="invitation-notification-title">Новое приглашение</div>
+                    <div id="invitationNotificationMessage" class="invitation-notification-message"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Socket.IO Client Library -->

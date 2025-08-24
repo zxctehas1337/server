@@ -33,6 +33,18 @@ const currentChatStatus = document.getElementById('currentChatStatus');
 const newChatBtn = document.getElementById('newChatBtn');
 const chatList = document.querySelector('.chat-list');
 
+// Invitation modal elements
+const invitationModal = document.getElementById('invitationModal');
+const invitationAvatar = document.getElementById('invitationAvatar');
+const invitationTitle = document.getElementById('invitationTitle');
+const invitationMessage = document.getElementById('invitationMessage');
+const acceptInvitationBtn = document.getElementById('acceptInvitationBtn');
+const declineInvitationBtn = document.getElementById('declineInvitationBtn');
+const invitationNotification = document.getElementById('invitationNotification');
+const invitationNotificationAvatar = document.getElementById('invitationNotificationAvatar');
+const invitationNotificationTitle = document.getElementById('invitationNotificationTitle');
+const invitationNotificationMessage = document.getElementById('invitationNotificationMessage');
+
 // Application state
 let currentUser = null;
 let isConnected = false;
@@ -640,7 +652,12 @@ switchChat = function(room) {
 // Handle escape key to close mobile sidebar
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    closeMobileSidebar();
+    // Priority: first close invitation modal, then close mobile sidebar
+    if (currentInvite) {
+      hideInvitationModal();
+    } else {
+      closeMobileSidebar();
+    }
   }
 });
 
@@ -657,5 +674,208 @@ window.addEventListener('resize', () => {
   if (currentUser) {
     scrollToBottom();
   }
+});
+
+// ===== INVITATION MODAL FUNCTIONALITY =====
+
+// State for managing invitations
+let pendingInvitations = new Map();
+let currentInvite = null;
+let notificationTimer = null;
+
+// UI Helper Functions for Invitation Modal
+function showInvitationModal(invite) {
+  if (!invite) return;
+  
+  currentInvite = invite;
+  
+  // Fill modal content
+  invitationAvatar.textContent = getAvatarInitials(invite.fromUser.username);
+  invitationTitle.textContent = 'Приглашение в приватный чат';
+  invitationMessage.textContent = invite.message || `${invite.fromUser.username} хочет начать приватный чат с вами.`;
+  
+  // Show modal
+  invitationModal.classList.add('show');
+  
+  // Add blur background effect
+  document.body.style.overflow = 'hidden';
+  
+  // Hide notification toast if it's showing
+  hideInvitationNotification();
+}
+
+function hideInvitationModal() {
+  invitationModal.classList.remove('show');
+  document.body.style.overflow = '';
+  currentInvite = null;
+}
+
+function showInvitationNotification(invite) {
+  if (!invite) return;
+  
+  // Clear any existing notification timer
+  if (notificationTimer) {
+    clearTimeout(notificationTimer);
+  }
+  
+  // Fill notification content
+  invitationNotificationAvatar.textContent = getAvatarInitials(invite.fromUser.username);
+  invitationNotificationTitle.textContent = 'Новое приглашение';
+  invitationNotificationMessage.textContent = `${invite.fromUser.username} приглашает в приватный чат`;
+  
+  // Show notification
+  invitationNotification.classList.add('show');
+  invitationNotification.classList.add('invitation-pulse');
+  
+  // Auto-hide after 6 seconds
+  notificationTimer = setTimeout(() => {
+    hideInvitationNotification();
+  }, 6000);
+  
+  // Add click handler to open full modal
+  const clickHandler = () => {
+    hideInvitationNotification();
+    showInvitationModal(invite);
+    invitationNotification.removeEventListener('click', clickHandler);
+  };
+  
+  invitationNotification.addEventListener('click', clickHandler);
+}
+
+function hideInvitationNotification() {
+  invitationNotification.classList.remove('show');
+  invitationNotification.classList.remove('invitation-pulse');
+  
+  if (notificationTimer) {
+    clearTimeout(notificationTimer);
+    notificationTimer = null;
+  }
+}
+
+// Handle invitation response
+function respondToInvite(accepted) {
+  if (!currentInvite) return;
+  
+  const invite = currentInvite;
+  
+  // Disable buttons to prevent double-click
+  acceptInvitationBtn.disabled = true;
+  declineInvitationBtn.disabled = true;
+  
+  // Send response to server
+  socket.emit('invitation_response', {
+    inviteId: invite.inviteId,
+    accepted: accepted
+  });
+  
+  // Remove from pending invitations
+  pendingInvitations.delete(invite.inviteId);
+  
+  // Hide modal
+  hideInvitationModal();
+  
+  // Show appropriate status message
+  if (accepted) {
+    showStatus(`Принято приглашение от ${invite.fromUser.username}`, 'success');
+    
+    // Switch to the private chat room
+    switchChat({
+      id: invite.roomId,
+      name: invite.fromUser.username,
+      type: 'private',
+      userId: invite.fromUser.id
+    });
+  } else {
+    showStatus(`Отклонено приглашение от ${invite.fromUser.username}`, 'info');
+  }
+  
+  // Re-enable buttons after delay
+  setTimeout(() => {
+    acceptInvitationBtn.disabled = false;
+    declineInvitationBtn.disabled = false;
+  }, 1000);
+}
+
+// Event Listeners for invitation buttons
+acceptInvitationBtn.addEventListener('click', () => respondToInvite(true));
+declineInvitationBtn.addEventListener('click', () => respondToInvite(false));
+
+// Close modal when clicking outside of it
+invitationModal.addEventListener('click', (e) => {
+  if (e.target === invitationModal) {
+    hideInvitationModal();
+  }
+});
+
+// Note: Escape key handling is done in the main Escape handler above
+
+// Socket event handler for incoming invitations
+socket.on('private_invitation', (invite) => {
+  console.log('Received private chat invitation:', invite);
+  
+  if (!invite || !invite.inviteId || !invite.fromUser) {
+    console.error('Invalid invitation data:', invite);
+    return;
+  }
+  
+  // Store invitation
+  pendingInvitations.set(invite.inviteId, invite);
+  
+  // Show notification toast
+  showInvitationNotification(invite);
+  
+  // Play a subtle notification sound (if browser supports it)
+  try {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dtyl4gBDWIzfPbfTEGHHnJ8OGVRAoRVK3n77BdGAg+ltryxnkpBSl+zPLaizsIGGS57+OZVA0NTaXh8bllHgg2jdXzzn0vBSF6yu/ejj0JE1Ko4/C2ZRwHN5DY88p9LgUme8rx3Y4+CRNSqOPwtmUcBzdOfz8B');
+    audio.volume = 0.1;
+    audio.play().catch(() => {});
+  } catch (e) {
+    // Ignore audio errors
+  }
+});
+
+// Socket event handler for invitation response acknowledgment
+socket.on('invitation_response_ack', (data) => {
+  console.log('Invitation response acknowledged:', data);
+  
+  if (data.success) {
+    if (data.accepted) {
+      // Invitation was accepted, room should be joined
+      showStatus('Подключение к приватному чату...', 'success');
+    }
+  } else {
+    showStatus(data.error || 'Ошибка при обработке приглашения', 'error');
+  }
+});
+
+// ===== TESTING FUNCTIONS (for demonstration) =====
+
+// Test function to simulate invitation (for testing purposes)
+function testInvitation() {
+  const mockInvitation = {
+    inviteId: 'test-invite-' + Date.now(),
+    roomId: 'private_1_2',
+    fromUser: {
+      id: 2,
+      username: 'TestUser'
+    },
+    message: 'Хочу обсудить с вами важный вопрос в приватном чате.'
+  };
+  
+  console.log('Testing invitation modal with mock data:', mockInvitation);
+  showInvitationNotification(mockInvitation);
+}
+
+// Make test function globally available for console testing
+window.testInvitation = testInvitation;
+
+// Console helper message
+console.log('🔧 Invitation modal is ready! You can test it by calling testInvitation() in the console.');
+console.log('📋 Available test functions:', {
+  testInvitation: 'Shows a mock invitation notification',
+  showInvitationModal: 'Directly shows the modal with mock data',
+  hideInvitationModal: 'Hides the modal',
+  showInvitationNotification: 'Shows notification toast',
+  hideInvitationNotification: 'Hides notification toast'
 });
 

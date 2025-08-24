@@ -906,6 +906,233 @@ input:focus-visible {
   outline-offset: 2px;
 }
 
+/* Chat Invitation Modal */
+.invitation-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.invitation-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.invitation-content {
+  background: var(--bg-primary);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-primary);
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+
+.invitation-modal.show .invitation-content {
+  transform: translateY(0);
+}
+
+.invitation-header {
+  margin-bottom: 1.5rem;
+}
+
+.invitation-avatar {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: var(--radius-xl);
+  background: var(--bg-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+}
+
+.invitation-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.invitation-message {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+.invitation-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.invitation-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.invitation-btn.accept {
+  background: var(--bg-success);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.invitation-btn.accept:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.invitation-btn.decline {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-primary);
+}
+
+.invitation-btn.decline:hover {
+  background: var(--bg-error);
+  color: white;
+  border-color: var(--bg-error);
+  transform: translateY(-1px);
+}
+
+.invitation-btn:active {
+  transform: translateY(0);
+}
+
+.invitation-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Invitation notification (small toast) */
+.invitation-notification {
+  position: fixed;
+  top: 6rem;
+  right: 2rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--bg-success);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  box-shadow: var(--shadow-xl);
+  z-index: 1001;
+  max-width: 320px;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.invitation-notification.show {
+  transform: translateX(0);
+}
+
+.invitation-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.invitation-notification-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.invitation-notification-text {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.invitation-notification-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.invitation-notification-message {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.invitation-pulse {
+  animation: invitationPulse 2s infinite;
+}
+
+@keyframes invitationPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+/* Mobile responsive for invitation modal */
+@media (max-width: 480px) {
+  .invitation-content {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .invitation-actions {
+    flex-direction: column;
+  }
+  
+  .invitation-btn {
+    width: 100%;
+  }
+  
+  .invitation-notification {
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+    transform: translateY(-100px);
+  }
+  
+  .invitation-notification.show {
+    transform: translateY(0);
+  }
+}
+
 /* Smooth Transitions */
 * {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
