@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browser Messenger</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Browser Messenger</h1>
+            <div id="userInfo" class="user-info"></div>
+        </header>
+
+        <!-- Login Form (shown initially) -->
+        <div id="loginContainer" class="login-container">
+            <form id="loginForm" class="login-form">
+                <h2>Join the Chat</h2>
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required minlength="3" maxlength="50" 
+                           placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required minlength="4" 
+                           placeholder="Enter your password">
+                </div>
+                <button type="submit">Join Chat</button>
+            </form>
+        </div>
+
+        <!-- Chat Interface (hidden initially) -->
+        <div id="chatContainer" class="chat-container" style="display: none;">
+            <!-- Messages Display -->
+            <div id="messagesContainer" class="messages-container">
+                <div id="messages" class="messages"></div>
+            </div>
+
+            <!-- Message Input Form -->
+            <form id="messageForm" class="message-form">
+                <div class="input-group">
+                    <input type="text" id="messageInput" placeholder="Type your message..." 
+                           maxlength="1000" autocomplete="off">
+                    <button type="submit">Send</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Status/Error Messages -->
+        <div id="statusMessage" class="status-message"></div>
+    </div>
+
+    <!-- Socket.IO Client Library -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Main Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
