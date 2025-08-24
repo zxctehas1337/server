@@ -7,7 +7,6 @@
     "start": "node server.js",
     "dev": "nodemon src/server.js",
     "init-db": "node scripts/init-db.js",
-    "migrate-db": "node scripts/migrate-db.js",
     "postinstall": "node scripts/init-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
