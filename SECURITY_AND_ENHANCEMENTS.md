@@ -1,0 +1,1 @@
+DATABASE_URL=postgresql://backend1_8r17_user:91OexnCLFddCoBnFvuWFjOkjQlrB77d2@dpg-d2lecg3e5dus738np6cg-a/backend1_8r17
