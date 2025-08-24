@@ -1,44 +1,59 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-async function addAvatarMigration() {
+async function addUserColumnsMigration() {
     const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
     });
 
     try {
-        console.log('Connecting to database for avatar migration...');
+        console.log('Connecting to database for user columns migration...');
         
-        // Check if avatar_url column exists
-        const avatarCheck = await pool.query(`
+        // Check which columns are missing
+        const columnsCheck = await pool.query(`
             SELECT column_name 
             FROM information_schema.columns 
             WHERE table_name = 'users' 
             AND table_schema = 'public'
-            AND column_name = 'avatar_url';
+            AND column_name IN ('avatar_url', 'theme_preference', 'last_seen');
         `);
         
-        const hasAvatarUrl = avatarCheck.rows.length > 0;
-        console.log('Users table has avatar_url column:', hasAvatarUrl);
+        const existingColumns = columnsCheck.rows.map(row => row.column_name);
+        const missingColumns = [];
         
-        if (hasAvatarUrl) {
-            console.log('Avatar URL column already exists. No action needed.');
+        if (!existingColumns.includes('avatar_url')) {
+            missingColumns.push('avatar_url');
+        }
+        if (!existingColumns.includes('theme_preference')) {
+            missingColumns.push('theme_preference');
+        }
+        if (!existingColumns.includes('last_seen')) {
+            missingColumns.push('last_seen');
+        }
+        
+        console.log('Existing user columns:', existingColumns);
+        console.log('Missing user columns:', missingColumns);
+        
+        if (missingColumns.length === 0) {
+            console.log('All required columns already exist. No action needed.');
             return;
         }
         
-        console.log('Adding avatar_url column to users table...');
+        console.log('Adding missing columns to users table...');
         
-        // Add avatar_url column
+        // Add all missing columns
         await pool.query(`
             ALTER TABLE users 
-            ADD COLUMN avatar_url VARCHAR(500);
+            ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(500),
+            ADD COLUMN IF NOT EXISTS theme_preference VARCHAR(10) DEFAULT 'light',
+            ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
         `);
         
-        console.log('Avatar migration completed successfully!');
+        console.log('User columns migration completed successfully!');
         
     } catch (error) {
-        console.error('Error during avatar migration:', error);
+        console.error('Error during user columns migration:', error);
         process.exit(1);
     } finally {
         await pool.end();
@@ -46,7 +61,7 @@ async function addAvatarMigration() {
 }
 
 if (require.main === module) {
-    addAvatarMigration();
+    addUserColumnsMigration();
 }
 
-module.exports = { addAvatarMigration };
+module.exports = { addUserColumnsMigration };
