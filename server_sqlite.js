@@ -167,34 +167,68 @@ io.on('connection', (socket) => {
         const userInfo = connectedUsers.get(socket.id);
         if (!userInfo) return;
         
-        const { roomId } = data;
+        const { roomId, roomType } = data;
+        const actualRoomId = roomType === 'private' ? roomId : (parseInt(roomId) || 1);
         
         // Leave current room
         if (userInfo.roomId) {
             socket.leave(`room_${userInfo.roomId}`);
         }
         
+        // For private chats, create room if it doesn't exist
+        if (roomType === 'private') {
+            // Parse private chat ID to get participants
+            const match = roomId.match(/private_(\d+)_(\d+)/);
+            if (match) {
+                const userId1 = parseInt(match[1]);
+                const userId2 = parseInt(match[2]);
+                
+                // Create private room entry if not exists
+                db.run(
+                    "INSERT OR IGNORE INTO chat_rooms (name, room_type, created_by) VALUES (?, 'private', ?)",
+                    [`Private Chat ${userId1}-${userId2}`, userId1],
+                    function(err) {
+                        if (!err && this.lastID) {
+                            // Add both participants
+                            db.run("INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (?, ?)", [this.lastID, userId1]);
+                            db.run("INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (?, ?)", [this.lastID, userId2]);
+                        }
+                    }
+                );
+            }
+        }
+        
         // Join new room
-        socket.join(`room_${roomId}`);
-        userInfo.roomId = roomId;
+        socket.join(`room_${actualRoomId}`);
+        userInfo.roomId = actualRoomId;
         
         // Get recent messages
-        db.all(
+        const query = roomType === 'private' ?
+            // For private chats, find messages by room name pattern
+            `SELECT m.id, m.content, m.timestamp, m.user_id, u.username 
+             FROM messages m 
+             JOIN users u ON m.user_id = u.id 
+             JOIN chat_rooms r ON m.room_id = r.id
+             WHERE r.name LIKE ? AND r.room_type = 'private'
+             ORDER BY m.timestamp DESC 
+             LIMIT 50` :
+            // For regular rooms, find by room ID
             `SELECT m.id, m.content, m.timestamp, m.user_id, u.username 
              FROM messages m 
              JOIN users u ON m.user_id = u.id 
              WHERE m.room_id = ? 
              ORDER BY m.timestamp DESC 
-             LIMIT 50`,
-            [roomId],
-            (err, messages) => {
-                socket.emit('room_joined', {
-                    success: true,
-                    roomId: roomId,
-                    messages: messages ? messages.reverse() : []
-                });
-            }
-        );
+             LIMIT 50`;
+        
+        const queryParam = roomType === 'private' ? `%${roomId.replace('private_', '')}%` : actualRoomId;
+        
+        db.all(query, [queryParam], (err, messages) => {
+            socket.emit('room_joined', {
+                success: true,
+                roomId: roomType === 'private' ? roomId : actualRoomId,
+                messages: messages ? messages.reverse() : []
+            });
+        });
     });
     
     // Handle messages
@@ -202,34 +236,91 @@ io.on('connection', (socket) => {
         const userInfo = connectedUsers.get(socket.id);
         if (!userInfo) return;
         
-        const { content, roomId } = data;
-        const targetRoomId = roomId || userInfo.roomId || 1;
+        const { content, roomId, roomType } = data;
+        let targetRoomId = roomId || userInfo.roomId || 1;
         
         if (!content || content.trim().length === 0) return;
         
-        // Insert message
-        db.run(
-            "INSERT INTO messages (user_id, room_id, content) VALUES (?, ?, ?)",
-            [userInfo.userId, targetRoomId, content.trim()],
-            function(err) {
-                if (err) {
-                    socket.emit('error', { message: 'Failed to send message' });
-                    return;
-                }
+        // For private chats, find or create the room in database
+        if (roomType === 'private' && typeof roomId === 'string' && roomId.includes('private_')) {
+            const match = roomId.match(/private_(\d+)_(\d+)/);
+            if (match) {
+                const userId1 = parseInt(match[1]);
+                const userId2 = parseInt(match[2]);
+                const roomName = `Private Chat ${userId1}-${userId2}`;
                 
-                const messageData = {
-                    id: this.lastID,
-                    content: content.trim(),
-                    username: userInfo.username,
-                    userId: userInfo.userId,
-                    roomId: targetRoomId,
-                    timestamp: new Date().toISOString()
-                };
-                
-                // Send to all clients in room
-                io.to(`room_${targetRoomId}`).emit('new_message', messageData);
+                // Find existing private room or create new one
+                db.get(
+                    "SELECT id FROM chat_rooms WHERE name = ? AND room_type = 'private'",
+                    [roomName],
+                    (err, room) => {
+                        if (err) {
+                            console.error('Error finding room:', err);
+                            return;
+                        }
+                        
+                        if (room) {
+                            // Use existing room
+                            insertMessage(room.id, roomId);
+                        } else {
+                            // Create new room
+                            db.run(
+                                "INSERT INTO chat_rooms (name, room_type, created_by) VALUES (?, 'private', ?)",
+                                [roomName, userInfo.userId],
+                                function(err) {
+                                    if (err) {
+                                        console.error('Error creating room:', err);
+                                        return;
+                                    }
+                                    
+                                    const newRoomId = this.lastID;
+                                    
+                                    // Add participants
+                                    db.run("INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (?, ?)", [newRoomId, userId1]);
+                                    db.run("INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (?, ?)", [newRoomId, userId2]);
+                                    
+                                    insertMessage(newRoomId, roomId);
+                                }
+                            );
+                        }
+                    }
+                );
+                return;
             }
-        );
+        }
+        
+        // Regular room message
+        insertMessage(targetRoomId, roomId);
+        
+        function insertMessage(dbRoomId, socketRoomId) {
+            db.run(
+                "INSERT INTO messages (user_id, room_id, content) VALUES (?, ?, ?)",
+                [userInfo.userId, dbRoomId, content.trim()],
+                function(err) {
+                    if (err) {
+                        console.error('Error inserting message:', err);
+                        socket.emit('error', { message: 'Failed to send message' });
+                        return;
+                    }
+                    
+                    const messageData = {
+                        id: this.lastID,
+                        content: content.trim(),
+                        username: userInfo.username,
+                        userId: userInfo.userId,
+                        roomId: socketRoomId,
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    // Send to all clients in room
+                    if (roomType === 'private') {
+                        io.to(`room_${socketRoomId}`).emit('new_message', messageData);
+                    } else {
+                        io.to(`room_${dbRoomId}`).emit('new_message', messageData);
+                    }
+                }
+            );
+        }
     });
     
     // Handle disconnection
