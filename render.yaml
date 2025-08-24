@@ -3,13 +3,26 @@ services:
     name: kracken-server
     env: node
     plan: free
-    buildCommand: npm install
-    startCommand: node apps/server/server.js
+    rootDir: apps/server
+    buildCommand: |
+      # Install root dependencies first
+      cd ../../ && npm install --include=dev
+      # Install server dependencies
+      npm install
+      # Initialize database schema
+      npm run init-db
+    startCommand: npm start
+    healthCheckPath: /api
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
-    # Add your environment variables here
-    # - key: DATABASE_URL
-    #   sync: false  # Set to true if you want to sync from Render dashboard
+      - key: DATABASE_URL
+        sync: false
+
+databases:
+  - name: kracken-db
+    databaseName: kracken_messenger
+    user: kracken_user
+    plan: free

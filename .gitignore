@@ -92,7 +92,9 @@ dist
 
 # Gatsby files
 .cache/
-public
+# General public folders (like Gatsby output) but exclude server static files
+public/
+!apps/server/public/
 
 # Vuepress build output
 .vuepress/dist

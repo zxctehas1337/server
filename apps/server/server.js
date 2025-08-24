@@ -3,6 +3,7 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { Pool } = require('pg');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -25,7 +26,41 @@ pool.connect((err, client, release) => {
 });
 
 // Middleware
-app.use(express.static(path.join(__dirname, 'public')));
+// Определяем корректный путь к публичным файлам для production
+
+// Для Render и локально: используем абсолютный путь от process.cwd()
+const publicPath = path.resolve(process.cwd(), 'apps/server/public');
+const indexPath = path.resolve(publicPath, 'index.html');
+
+console.log('Static files path:', publicPath);
+console.log('Index file path:', indexPath);
+console.log('Current working directory:', process.cwd());
+console.log('__dirname:', __dirname);
+
+// Проверяем существование критических файлов
+try {
+    const publicExists = fs.existsSync(publicPath);
+    const indexExists = fs.existsSync(indexPath);
+    
+    console.log('Public directory exists:', publicExists);
+    console.log('Index.html exists:', indexExists);
+    
+    if (publicExists) {
+        const files = fs.readdirSync(publicPath);
+        console.log('Files in public directory:', files);
+    }
+    
+    if (!indexExists) {
+        console.error('❌ CRITICAL: index.html not found at:', indexPath);
+        console.error('Available files in current directory:', fs.readdirSync(__dirname));
+    } else {
+        console.log('✅ index.html found successfully');
+    }
+} catch (error) {
+    console.error('Error checking files:', error.message);
+}
+
+app.use(express.static(publicPath));
 app.use(express.json());
 
 // Store connected users
@@ -49,7 +84,7 @@ function broadcastOnlineUsers() {
 
 // Serve main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(indexPath);
 });
 
 // API info endpoint
