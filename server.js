@@ -29,7 +29,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // Store connected users
-const connectedUsers = new Map(); // socketId -> { username, userId }
+const connectedUsers = new Map(); // socketId -> { username, userId, roomId }
+const userRooms = new Map(); // userId -> Set of roomIds
+
+// Helper function to broadcast online users
+function broadcastOnlineUsers() {
+    const onlineUsers = Array.from(connectedUsers.values())
+        .filter((user, index, arr) => 
+            // Remove duplicates by userId
+            arr.findIndex(u => u.userId === user.userId) === index
+        )
+        .map(user => ({
+            id: user.userId,
+            username: user.username
+        }));
+    
+    io.emit('online_users', onlineUsers);
+}
 
 // Serve main page
 app.get('/', (req, res) => {
@@ -53,17 +69,48 @@ io.on('connection', (socket) => {
             
             const user = userResult.rows[0];
             
+            // Generate avatar URL
+            const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username.toLowerCase())}&backgroundColor=6366f1`;
+            
+            // Update user with avatar in database
+            await pool.query(
+                'UPDATE users SET avatar_url = $1, last_seen = CURRENT_TIMESTAMP WHERE id = $2',
+                [avatarUrl, user.id]
+            );
+            
             // Store user info for this socket
             connectedUsers.set(socket.id, {
                 username: user.username,
-                userId: user.id
+                userId: user.id,
+                roomId: 1 // Default to general chat
             });
+            
+            // Initialize user rooms
+            if (!userRooms.has(user.id)) {
+                userRooms.set(user.id, new Set([1])); // Add to general chat
+            }
+            
+            // Join user to general room
+            socket.join('room_1');
             
             // Send success response to client
             socket.emit('username_set', {
                 success: true,
-                user: { id: user.id, username: user.username }
+                user: { 
+                    id: user.id, 
+                    username: user.username,
+                    avatar_url: avatarUrl
+                }
             });
+            
+            // Add user to general chat room if not already there
+            await pool.query(
+                'INSERT INTO chat_room_participants (room_id, user_id) VALUES ($1, $2) ON CONFLICT (room_id, user_id) DO NOTHING',
+                [1, user.id]
+            );
+            
+            // Send updated online users list to all clients
+            broadcastOnlineUsers();
             
             // Notify others that user joined
             socket.broadcast.emit('user_joined', {
@@ -82,6 +129,48 @@ io.on('connection', (socket) => {
         }
     });
     
+    // Handle joining room
+    socket.on('join_room', async (data) => {
+        try {
+            const userInfo = connectedUsers.get(socket.id);
+            if (!userInfo) {
+                socket.emit('error', { message: 'Please set a username first' });
+                return;
+            }
+            
+            const { roomId, roomType } = data;
+            
+            // Leave current room
+            if (userInfo.roomId) {
+                socket.leave(`room_${userInfo.roomId}`);
+            }
+            
+            // Join new room
+            socket.join(`room_${roomId}`);
+            userInfo.roomId = roomId;
+            
+            // Get recent messages for this room
+            const messagesResult = await pool.query(`
+                SELECT m.id, m.content, m.timestamp, m.user_id, u.username 
+                FROM messages m 
+                JOIN users u ON m.user_id = u.id 
+                WHERE m.room_id = $1 
+                ORDER BY m.timestamp DESC 
+                LIMIT 50
+            `, [roomId]);
+            
+            socket.emit('room_joined', {
+                success: true,
+                roomId: roomId,
+                messages: messagesResult.rows.reverse()
+            });
+            
+        } catch (error) {
+            console.error('Error joining room:', error);
+            socket.emit('error', { message: 'Failed to join room' });
+        }
+    });
+    
     // Handle incoming messages
     socket.on('send_message', async (data) => {
         try {
@@ -92,7 +181,8 @@ io.on('connection', (socket) => {
                 return;
             }
             
-            const { content } = data;
+            const { content, roomId, roomType } = data;
+            const targetRoomId = roomId || userInfo.roomId || 1;
             
             // Validate message content
             if (!content || content.trim().length === 0) {
@@ -107,25 +197,32 @@ io.on('connection', (socket) => {
             
             // Insert message into database
             const messageResult = await pool.query(
-                'INSERT INTO messages (user_id, content) VALUES ($1, $2) RETURNING id, content, timestamp',
-                [userInfo.userId, content.trim()]
+                'INSERT INTO messages (user_id, room_id, content) VALUES ($1, $2, $3) RETURNING id, content, timestamp',
+                [userInfo.userId, targetRoomId, content.trim()]
             );
             
             const message = messageResult.rows[0];
             
-            // Broadcast message to all connected clients
+            // Broadcast message to all clients in the room
             const messageData = {
                 id: message.id,
                 content: message.content,
                 username: userInfo.username,
                 userId: userInfo.userId,
+                roomId: targetRoomId,
                 timestamp: message.timestamp
             };
             
-            // Send to all clients including sender
-            io.emit('new_message', messageData);
+            // Send to all clients in the room including sender
+            if (roomType === 'private') {
+                // For private messages, send to both participants
+                io.to(`room_${targetRoomId}`).emit('new_message', messageData);
+            } else {
+                // For general/public rooms
+                io.to(`room_${targetRoomId}`).emit('new_message', messageData);
+            }
             
-            console.log(`Message from ${userInfo.username}: ${content}`);
+            console.log(`Message from ${userInfo.username} in room ${targetRoomId}: ${content}`);
             
         } catch (error) {
             console.error('Error sending message:', error);
@@ -140,14 +237,23 @@ io.on('connection', (socket) => {
         if (userInfo) {
             console.log(`User ${userInfo.username} disconnected`);
             
+            // Update last seen in database
+            pool.query(
+                'UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = $1',
+                [userInfo.userId]
+            ).catch(err => console.error('Error updating last_seen:', err));
+            
+            // Remove user from connected users
+            connectedUsers.delete(socket.id);
+            
+            // Update online users list
+            broadcastOnlineUsers();
+            
             // Notify others that user left
             socket.broadcast.emit('user_left', {
                 username: userInfo.username,
                 message: `${userInfo.username} left the chat`
             });
-            
-            // Remove user from connected users
-            connectedUsers.delete(socket.id);
         } else {
             console.log(`Anonymous user disconnected: ${socket.id}`);
         }
