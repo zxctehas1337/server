@@ -594,16 +594,68 @@ window.addEventListener('resize', () => {
 });
 
 // Mobile sidebar toggle (for responsive design)
-function toggleSidebar() {
+function toggleMobileSidebar() {
   const sidebar = document.querySelector('.sidebar');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+  
   sidebar.classList.toggle('open');
+  mobileOverlay.classList.toggle('active');
+  
+  // Prevent body scroll when sidebar is open
+  document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
 }
 
-// Add mobile menu button (will be added via CSS media queries)
-if (window.innerWidth <= 768) {
-  const mobileMenuBtn = document.createElement('button');
-  mobileMenuBtn.className = 'mobile-menu-btn';
-  mobileMenuBtn.innerHTML = '☰';
-  mobileMenuBtn.addEventListener('click', toggleSidebar);
-  document.querySelector('.header-left').appendChild(mobileMenuBtn);
+function closeMobileSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const mobileOverlay = document.getElementById('mobileOverlay');
+  
+  sidebar.classList.remove('open');
+  mobileOverlay.classList.remove('active');
+  document.body.style.overflow = '';
 }
+
+// Mobile navigation button handler
+const mobileNavBtn = document.getElementById('mobileNavBtn');
+if (mobileNavBtn) {
+  mobileNavBtn.addEventListener('click', toggleMobileSidebar);
+}
+
+// Mobile overlay click handler
+const mobileOverlay = document.getElementById('mobileOverlay');
+if (mobileOverlay) {
+  mobileOverlay.addEventListener('click', closeMobileSidebar);
+}
+
+// Close sidebar when switching chats on mobile
+const originalSwitchChat = switchChat;
+switchChat = function(room) {
+  originalSwitchChat.call(this, room);
+  
+  // Close mobile sidebar after switching chat
+  if (window.innerWidth <= 768) {
+    closeMobileSidebar();
+  }
+};
+
+// Handle escape key to close mobile sidebar
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeMobileSidebar();
+  }
+});
+
+// Handle window resize for mobile responsiveness
+const originalResizeHandler = window.onresize;
+window.addEventListener('resize', () => {
+  if (originalResizeHandler) originalResizeHandler();
+  
+  // Close sidebar if window is resized to desktop size
+  if (window.innerWidth > 768) {
+    closeMobileSidebar();
+  }
+  
+  if (currentUser) {
+    scrollToBottom();
+  }
+});
+
