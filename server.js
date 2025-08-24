@@ -138,7 +138,45 @@ io.on('connection', (socket) => {
                 return;
             }
             
-            const { roomId, roomType } = data;
+            let { roomId, roomType } = data;
+            let actualRoomId = roomId;
+            
+            // Handle private chat room creation
+            if (roomType === 'private' && typeof roomId === 'string' && roomId.startsWith('private_')) {
+                // Extract user IDs from private room string (e.g., "private_1_4" -> [1, 4])
+                const userIds = roomId.replace('private_', '').split('_').map(id => parseInt(id));
+                const [user1Id, user2Id] = userIds.sort((a, b) => a - b); // Sort for consistency
+                
+                // Check if private room already exists
+                const existingRoom = await pool.query(`
+                    SELECT cr.id 
+                    FROM chat_rooms cr
+                    JOIN chat_room_participants crp1 ON cr.id = crp1.room_id
+                    JOIN chat_room_participants crp2 ON cr.id = crp2.room_id
+                    WHERE cr.room_type = 'private' 
+                    AND crp1.user_id = $1 AND crp2.user_id = $2
+                    AND crp1.user_id != crp2.user_id
+                `, [user1Id, user2Id]);
+                
+                if (existingRoom.rows.length > 0) {
+                    actualRoomId = existingRoom.rows[0].id;
+                } else {
+                    // Create new private room
+                    const newRoom = await pool.query(`
+                        INSERT INTO chat_rooms (name, room_type, created_by) 
+                        VALUES ($1, 'private', $2) 
+                        RETURNING id
+                    `, [`Private Chat`, userInfo.userId]);
+                    
+                    actualRoomId = newRoom.rows[0].id;
+                    
+                    // Add both participants to the room
+                    await pool.query(`
+                        INSERT INTO chat_room_participants (room_id, user_id) 
+                        VALUES ($1, $2), ($1, $3)
+                    `, [actualRoomId, user1Id, user2Id]);
+                }
+            }
             
             // Leave current room
             if (userInfo.roomId) {
@@ -146,8 +184,8 @@ io.on('connection', (socket) => {
             }
             
             // Join new room
-            socket.join(`room_${roomId}`);
-            userInfo.roomId = roomId;
+            socket.join(`room_${actualRoomId}`);
+            userInfo.roomId = actualRoomId;
             
             // Get recent messages for this room
             const messagesResult = await pool.query(`
@@ -157,11 +195,12 @@ io.on('connection', (socket) => {
                 WHERE m.room_id = $1 
                 ORDER BY m.timestamp DESC 
                 LIMIT 50
-            `, [roomId]);
+            `, [actualRoomId]);
             
             socket.emit('room_joined', {
                 success: true,
-                roomId: roomId,
+                roomId: actualRoomId,
+                originalRoomId: roomId, // Send back original ID for client to track
                 messages: messagesResult.rows.reverse()
             });
             
@@ -182,7 +221,32 @@ io.on('connection', (socket) => {
             }
             
             const { content, roomId, roomType } = data;
-            const targetRoomId = roomId || userInfo.roomId || 1;
+            let targetRoomId = roomId || userInfo.roomId || 1;
+            
+            // Handle private chat room ID conversion
+            if (roomType === 'private' && typeof roomId === 'string' && roomId.startsWith('private_')) {
+                // Extract user IDs from private room string
+                const userIds = roomId.replace('private_', '').split('_').map(id => parseInt(id));
+                const [user1Id, user2Id] = userIds.sort((a, b) => a - b);
+                
+                // Find the actual room ID from database
+                const existingRoom = await pool.query(`
+                    SELECT cr.id 
+                    FROM chat_rooms cr
+                    JOIN chat_room_participants crp1 ON cr.id = crp1.room_id
+                    JOIN chat_room_participants crp2 ON cr.id = crp2.room_id
+                    WHERE cr.room_type = 'private' 
+                    AND crp1.user_id = $1 AND crp2.user_id = $2
+                    AND crp1.user_id != crp2.user_id
+                `, [user1Id, user2Id]);
+                
+                if (existingRoom.rows.length > 0) {
+                    targetRoomId = existingRoom.rows[0].id;
+                } else {
+                    socket.emit('error', { message: 'Private room not found' });
+                    return;
+                }
+            }
             
             // Validate message content
             if (!content || content.trim().length === 0) {
