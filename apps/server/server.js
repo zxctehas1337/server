@@ -25,6 +25,7 @@ pool.connect((err, client, release) => {
 });
 
 // Middleware
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // Store connected users
@@ -46,8 +47,13 @@ function broadcastOnlineUsers() {
     io.emit('online_users', onlineUsers);
 }
 
-// API info endpoint
+// Serve main page
 app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API info endpoint
+app.get('/api', (req, res) => {
     res.json({
         message: 'Kracken Messenger Backend API',
         version: '2.0.0',
