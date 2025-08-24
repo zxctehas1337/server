@@ -25,7 +25,7 @@ pool.connect((err, client, release) => {
 });
 
 // Middleware
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // Store connected users
@@ -33,7 +33,7 @@ const connectedUsers = new Map(); // socketId -> { username, userId }
 
 // Serve main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Socket.IO connection handling
