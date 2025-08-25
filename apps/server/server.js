@@ -39,6 +39,7 @@ pool.connect((err, client, release) => {
 // Для Render и локально: используем абсолютный путь от process.cwd()
 const publicPath = path.resolve(process.cwd(), 'apps/server/public');
 const indexPath = path.resolve(publicPath, 'index.html');
+const notFoundPath = path.resolve(process.cwd(), 'apps/server/404.html');
 
 logger.info({ publicPath }, 'Static files path');
 logger.info({ indexPath }, 'Index file path');
@@ -48,6 +49,7 @@ logger.debug({ cwd: process.cwd(), dirname: __dirname }, 'Process directories');
 try {
     const publicExists = fs.existsSync(publicPath);
     const indexExists = fs.existsSync(indexPath);
+    const notFoundExists = fs.existsSync(notFoundPath);
     
     logger.info({ publicExists, indexExists }, 'Public and index existence');
     
@@ -60,6 +62,9 @@ try {
         logger.error({ indexPath, files: fs.readdirSync(__dirname) }, 'CRITICAL: index.html not found');
     } else {
         logger.info('index.html found successfully');
+    }
+    if (!notFoundExists) {
+        logger.warn({ notFoundPath }, '404.html not found; 404s will return plain text');
     }
 } catch (error) {
     logger.error({ err: error }, 'Error checking files');
@@ -451,6 +456,20 @@ io.on('connection', (socket) => {
             logger.info({ socketId: socket.id }, 'Anonymous user disconnected');
         }
     });
+});
+
+// 404 handler - must be after all other routes
+app.use((req, res, next) => {
+    try {
+        if (fs.existsSync(notFoundPath)) {
+            res.status(404).sendFile(notFoundPath);
+        } else {
+            res.status(404).send('404 Not Found');
+        }
+    } catch (e) {
+        logger.error({ err: e }, 'Error serving 404 page');
+        res.status(404).send('404 Not Found');
+    }
 });
 
 // Error handling middleware
