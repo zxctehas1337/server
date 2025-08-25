@@ -838,16 +838,22 @@ socket.on('private_invitation', (invite) => {
   // Store invitation
   pendingInvitations.set(invite.inviteId, invite);
   
-  // Show notification toast
-  showInvitationNotification(invite);
+  // Check if device is mobile - don't show notification on mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
   
-  // Play a subtle notification sound (if browser supports it)
-  try {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dtyl4gBDWIzfPbfTEGHHnJ8OGVRAoRVK3n77BdGAg+ltryxnkpBSl+zPLaizsIGGS57+OZVA0NTaXh8bllHgg2jdXzzn0vBSF6yu/ejj0JE1Ko4/C2ZRwHN5DY88p9LgUme8rx3Y4+CRNSqOPwtmUcBzdOfz8B');
-    audio.volume = 0.1;
-    audio.play().catch(() => {});
-  } catch (e) {
-    // Ignore audio errors
+  // Only show notification toast on desktop devices
+  if (!isMobile) {
+    showInvitationNotification(invite);
+    
+    // Play a subtle notification sound (if browser supports it)
+    try {
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dtyl4gBDWIzfPbfTEGHHnJ8OGVRAoRVK3n77BdGAg+ltryxnkpBSl+zPLaizsIGGS57+OZVA0NTaXh8bllHgg2jdXzzn0vBSF6yu/ejj0JE1Ko4/C2ZRwHN5DY88p9LgUme8rx3Y4+CRNSqOPwtmUcBzdOfz8B');
+      audio.volume = 0.1;
+      audio.play().catch(() => {});
+    } catch (e) {
+      // Ignore audio errors
+    }
   }
 });
 
@@ -880,7 +886,17 @@ function testInvitation() {
   };
   
   console.log('Testing invitation modal with mock data:', mockInvitation);
-  showInvitationNotification(mockInvitation);
+  
+  // Check if device is mobile - don't show notification on mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+  
+  // Only show notification toast on desktop devices
+  if (!isMobile) {
+    showInvitationNotification(mockInvitation);
+  } else {
+    console.log('Skipping invitation notification on mobile device');
+  }
 }
 
 // Make test function globally available for console testing
