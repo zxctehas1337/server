@@ -26,6 +26,7 @@ pool.connect((err, client, release) => {
 });
 
 // Middleware
+//tabine hello
 // Определяем корректный путь к публичным файлам для production
 
 // Для Render и локально: используем абсолютный путь от process.cwd()
@@ -103,6 +104,40 @@ app.get('/api', (req, res) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
+    // --- Приватные чаты: приглашения и ответы ---
+    socket.on('private_chat_invite', (data) => {
+        // data: { toUserId, fromUser }
+        // Найти сокет приглашённого пользователя
+        let targetSocketId = null;
+        for (const [sockId, info] of connectedUsers.entries()) {
+            if (info.userId === data.toUserId) {
+                targetSocketId = sockId;
+                break;
+            }
+        }
+        if (targetSocketId) {
+            io.to(targetSocketId).emit('private_chat_invite', { fromUser: data.fromUser });
+        }
+    });
+
+    socket.on('private_chat_response', (data) => {
+        // data: { accepted, fromUserId, toUser }
+        // Найти сокет инициатора приглашения
+        let initiatorSocketId = null;
+        for (const [sockId, info] of connectedUsers.entries()) {
+            if (info.userId == data.fromUserId) {
+                initiatorSocketId = sockId;
+                break;
+            }
+        }
+        if (initiatorSocketId) {
+            io.to(initiatorSocketId).emit('private_chat_response', {
+                accepted: data.accepted,
+                toUser: data.toUser,
+                fromUserId: data.fromUserId
+            });
+        }
+    });
     console.log(`User connected: ${socket.id}`);
     
     // Handle username setting
