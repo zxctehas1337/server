@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Lost in the Depths</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(ellipse at center, #0a0a0a 0%, #1a1a2e 30%, #16213e 70%, #0f1419 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Enhanced animated bubbles background */
+        .bubble {
+            position: absolute;
+            background: radial-gradient(circle, rgba(100, 149, 237, 0.15) 0%, rgba(70, 130, 180, 0.08) 70%, transparent 100%);
+            border-radius: 50%;
+            animation: float 12s infinite ease-in-out;
+            border: 1px solid rgba(100, 149, 237, 0.1);
+        }
+
+        .bubble:nth-child(1) {
+            width: 25px;
+            height: 25px;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .bubble:nth-child(2) {
+            width: 40px;
+            height: 40px;
+            left: 85%;
+            animation-delay: 3s;
+        }
+
+        .bubble:nth-child(3) {
+            width: 18px;
+            height: 18px;
+            left: 75%;
+            animation-delay: 6s;
+        }
+
+        .bubble:nth-child(4) {
+            width: 32px;
+            height: 32px;
+            left: 15%;
+            animation-delay: 9s;
+        }
+
+        .bubble:nth-child(5) {
+            width: 22px;
+            height: 22px;
+            left: 95%;
+            animation-delay: 12s;
+        }
+
+        .bubble:nth-child(6) {
+            width: 28px;
+            height: 28px;
+            left: 60%;
+            animation-delay: 15s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(120vh) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            5%, 95% {
+                opacity: 0.7;
+            }
+            50% {
+                transform: translateY(-15vh) scale(1) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        .container {
+            text-align: center;
+            z-index: 10;
+            max-width: 900px;
+            padding: 2rem;
+        }
+
+        .kraken-container {
+            position: relative;
+            margin-bottom: 3rem;
+            animation: deepSway 6s ease-in-out infinite;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.8));
+        }
+
+        @keyframes deepSway {
+            0%, 100% { transform: rotate(-1deg) translateY(0px); }
+            33% { transform: rotate(1deg) translateY(-5px); }
+            66% { transform: rotate(-0.5deg) translateY(3px); }
+        }
+
+        .kraken {
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 2rem;
+            position: relative;
+        }
+
+        /* Enhanced Kraken body with more realistic shape */
+        .kraken-body {
+            width: 140px;
+            height: 180px;
+            background: radial-gradient(ellipse at 30% 30%, #4a5568 0%, #2d3748 40%, #1a202c 100%);
+            border-radius: 70px 70px 45px 45px;
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 
+                inset 0 -20px 40px rgba(0, 0, 0, 0.3),
+                0 15px 50px rgba(0, 0, 0, 0.7),
+                0 5px 20px rgba(255, 107, 107, 0.1);
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.02); }
+        }
+
+        /* Kraken head texture */
+        .kraken-body::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 60px;
+            background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+            border-radius: 50px 50px 30px 30px;
+        }
+
+        /* Enhanced Kraken eyes */
+        .eye {
+            width: 35px;
+            height: 35px;
+            background: radial-gradient(circle at 30% 30%, #ff8a8a 0%, #ff6b6b 40%, #cc4444 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 75px;
+            animation: blink 4s infinite;
+            box-shadow: 
+                inset 0 -8px 15px rgba(0, 0, 0, 0.3),
+                0 0 25px rgba(255, 107, 107, 0.4),
+                0 0 40px rgba(255, 107, 107, 0.2);
+            border: 2px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .eye.left { left: 30%; }
+        .eye.right { left: 60%; }
+
+        .eye::after {
+            content: '';
+            width: 18px;
+            height: 18px;
+            background: radial-gradient(circle at 40% 30%, #ff4444 0%, #aa2222 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            animation: lookAround 6s infinite ease-in-out;
+            box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .eye::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 200, 200, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 6px;
+            left: 12px;
+            animation: lookAround 6s infinite ease-in-out;
+        }
+
+        @keyframes blink {
+            0%, 92%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+
+        @keyframes lookAround {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-4px, -3px); }
+            40% { transform: translate(4px, -2px); }
+            60% { transform: translate(-3px, 3px); }
+            80% { transform: translate(2px, 2px); }
+        }
+
+        /* More realistic tentacles with suction cups */
+        .tentacle {
+            position: absolute;
+            background: linear-gradient(145deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+            border-radius: 50px;
+            transform-origin: top center;
+            box-shadow: 
+                inset 0 -5px 15px rgba(0, 0, 0, 0.3),
+                2px 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .tentacle::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 100%;
+            left: 20%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(255, 255, 255, 0.05) 0px,
+                rgba(255, 255, 255, 0.05) 2px,
+                transparent 2px,
+                transparent 8px
+            );
+            border-radius: 30px;
+        }
+
+        /* Suction cups */
+        .tentacle::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 30%, rgba(0, 0, 0, 0.2) 70%);
+            border-radius: 50%;
+            box-shadow: 
+                0 15px 0 rgba(255, 255, 255, 0.08),
+                0 30px 0 rgba(255, 255, 255, 0.06),
+                0 45px 0 rgba(255, 255, 255, 0.04),
+                0 60px 0 rgba(255, 255, 255, 0.02);
+            transform: translateX(-50%);
+        }
+
+        .tentacle1 {
+            width: 18px;
+            height: 120px;
+            top: 200px;
+            left: 15%;
+            animation: wave1 4s ease-in-out infinite;
+        }
+
+        .tentacle2 {
+            width: 22px;
+            height: 140px;
+            top: 190px;
+            left: 30%;
+            animation: wave2 4.5s ease-in-out infinite;
+        }
+
+        .tentacle3 {
+            width: 25px;
+            height: 160px;
+            top: 180px;
+            left: 45%;
+            animation: wave3 5s ease-in-out infinite;
+        }
+
+        .tentacle4 {
+            width: 24px;
+            height: 150px;
+            top: 185px;
+            left: 60%;
+            animation: wave4 4.2s ease-in-out infinite;
+        }
+
+        .tentacle5 {
+            width: 20px;
+            height: 130px;
+            top: 195px;
+            left: 75%;
+            animation: wave5 4.8s ease-in-out infinite;
+        }
+
+        .tentacle6 {
+            width: 19px;
+            height: 110px;
+            top: 205px;
+            left: 88%;
+            animation: wave6 3.8s ease-in-out infinite;
+        }
+
+        .tentacle7 {
+            width: 16px;
+            height: 100px;
+            top: 210px;
+            left: 8%;
+            animation: wave7 4.3s ease-in-out infinite;
+        }
+
+        .tentacle8 {
+            width: 21px;
+            height: 135px;
+            top: 188px;
+            left: 85%;
+            animation: wave8 4.7s ease-in-out infinite;
+        }
+
+        @keyframes wave1 {
+            0%, 100% { transform: rotate(-25deg) scale(1); }
+            50% { transform: rotate(-40deg) scale(1.05); }
+        }
+
+        @keyframes wave2 {
+            0%, 100% { transform: rotate(-15deg) scale(1); }
+            50% { transform: rotate(20deg) scale(1.03); }
+        }
+
+        @keyframes wave3 {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(-30deg) scale(1.08); }
+        }
+
+        @keyframes wave4 {
+            0%, 100% { transform: rotate(15deg) scale(1); }
+            50% { transform: rotate(-20deg) scale(1.04); }
+        }
+
+        @keyframes wave5 {
+            0%, 100% { transform: rotate(25deg) scale(1); }
+            50% { transform: rotate(40deg) scale(1.06); }
+        }
+
+        @keyframes wave6 {
+            0%, 100% { transform: rotate(35deg) scale(1); }
+            50% { transform: rotate(50deg) scale(1.02); }
+        }
+
+        @keyframes wave7 {
+            0%, 100% { transform: rotate(-35deg) scale(1); }
+            50% { transform: rotate(-50deg) scale(1.07); }
+        }
+
+        @keyframes wave8 {
+            0%, 100% { transform: rotate(30deg) scale(1); }
+            50% { transform: rotate(10deg) scale(1.04); }
+        }
+
+        /* Multiple question marks falling down */
+        .question-marks {
+            position: absolute;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 200px;
+        }
+
+        .question-mark {
+            position: absolute;
+            font-size: 2rem;
+            color: #ffd700;
+            text-shadow: 
+                0 0 20px rgba(255, 215, 0, 0.6),
+                0 0 40px rgba(255, 215, 0, 0.3);
+            opacity: 0;
+            animation: fallDown 3s infinite ease-in-out;
+            font-weight: bold;
+        }
+
+        .question-mark:nth-child(1) {
+            left: 20%;
+            font-size: 2.5rem;
+            animation-delay: 0s;
+        }
+
+        .question-mark:nth-child(2) {
+            left: 40%;
+            font-size: 1.8rem;
+            animation-delay: 0.5s;
+        }
+
+        .question-mark:nth-child(3) {
+            left: 60%;
+            font-size: 2.2rem;
+            animation-delay: 1s;
+        }
+
+        .question-mark:nth-child(4) {
+            left: 80%;
+            font-size: 1.9rem;
+            animation-delay: 1.5s;
+        }
+
+        .question-mark:nth-child(5) {
+            left: 10%;
+            font-size: 2.1rem;
+            animation-delay: 2s;
+        }
+
+        .question-mark:nth-child(6) {
+            left: 70%;
+            font-size: 1.7rem;
+            animation-delay: 2.5s;
+        }
+
+        @keyframes fallDown {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(150px) rotate(360deg) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        /* Enhanced Typography */
+        .error-code {
+            font-size: 9rem;
+            font-weight: bold;
+            background: linear-gradient(145deg, #ff6b6b, #ff8e8e, #ff5555);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: glow 3s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 30px rgba(255, 107, 107, 0.4));
+        }
+
+        @keyframes glow {
+            from { 
+                filter: drop-shadow(0 0 30px rgba(255, 107, 107, 0.4));
+            }
+            to { 
+                filter: drop-shadow(0 0 60px rgba(255, 107, 107, 0.8));
+            }
+        }
+
+        .error-message {
+            font-size: 1.8rem;
+            color: #a0aec0;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .description {
+            font-size: 1.2rem;
+            color: #718096;
+            margin-bottom: 3rem;
+            line-height: 1.7;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Enhanced Buttons */
+        .buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 1.2rem 2.5rem;
+            background: linear-gradient(145deg, #4299e1, #3182ce, #2b77cb);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: bold;
+            transition: all 0.4s ease;
+            box-shadow: 
+                0 8px 20px rgba(66, 153, 225, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px) rotateX(5deg);
+            box-shadow: 
+                0 15px 35px rgba(66, 153, 225, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(145deg, #805ad5, #6b46c1, #553c9a);
+            box-shadow: 
+                0 8px 20px rgba(128, 90, 213, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 
+                0 15px 35px rgba(128, 90, 213, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Enhanced deep sea particles */
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(100, 149, 237, 0.4) 0%, rgba(70, 130, 180, 0.2) 50%, transparent 100%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: drift 20s infinite linear;
+            border: 1px solid rgba(100, 149, 237, 0.2);
+        }
+
+        .particle:nth-child(odd) {
+            animation-direction: reverse;
+            background: radial-gradient(circle, rgba(147, 197, 253, 0.3) 0%, rgba(96, 165, 250, 0.15) 50%, transparent 100%);
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translateX(-15vw) translateY(110vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+            5% {
+                opacity: 0.7;
+                transform: translateX(-12vw) translateY(100vh) rotate(10deg) scale(1);
+            }
+            95% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateX(115vw) translateY(-15vh) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .kraken {
+                width: 300px;
+                height: 300px;
+            }
+
+            .error-code {
+                font-size: 6rem;
+            }
+
+            .error-message {
+                font-size: 1.4rem;
+            }
+
+            .description {
+                font-size: 1rem;
+            }
+
+            .buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 220px;
+                padding: 1rem 2rem;
+            }
+
+            .question-mark {
+                font-size: 1.5rem;
+            }
+
+            .question-mark:nth-child(1) {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+    <div class="bubble"></div>
+
+    <div class="container">
+        <div class="kraken-container">
+            <div class="kraken">
+                <div class="kraken-body">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                </div>
+                <div class="tentacle tentacle1"></div>
+                <div class="tentacle tentacle2"></div>
+                <div class="tentacle tentacle3"></div>
+                <div class="tentacle tentacle4"></div>
+                <div class="tentacle tentacle5"></div>
+                <div class="tentacle tentacle6"></div>
+                <div class="tentacle tentacle7"></div>
+                <div class="tentacle tentacle8"></div>
+            </div>
+            <div class="question-marks">
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+            </div>
+        </div>
+
+        <div class="error-code">404</div>
+        <div class="error-message">Lost in the Deep Web</div>
+        <div class="description">
+            The mighty kraken has searched the deepest trenches of the internet,<br>
+            but the page you're looking for has vanished into the digital abyss.<br>
+            Even the ancient sea beast is puzzled by this mystery.
+        </div>
+
+        <div class="buttons">
+            <a href="https://beckend-yaj1.onrender.com/" class="btn">Return to Harbor</a>
+            <a href="javascript:history.back()" class="btn secondary">Navigate Back</a>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced particle creation
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 6 + 3;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 15 + 15) + 's';
+            document.body.appendChild(particle);
+
+            setTimeout(() => {
+                if (particle.parentNode) {
+                    particle.remove();
+                }
+            }, 35000);
+        }
+
+        // Generate particles more frequently
+        setInterval(createParticle, 1500);
+        
+        // Create initial particles
+        for (let i = 0; i < 8; i++) {
+            setTimeout(createParticle, i * 800);
+        }
+
+        // Enhanced mouse interaction
+        document.addEventListener('mousemove', (e) => {
+            const kraken = document.querySelector('.kraken-container');
+            const x = (e.clientX / window.innerWidth - 0.5) * 15;
+            const y = (e.clientY / window.innerHeight - 0.5) * 15;
+            kraken.style.transform = `translate(${x}px, ${y}px) rotate(${x * 0.08}deg)`;
+        });
+
+        // Add click interaction for question marks
+        document.querySelector('.kraken-container').addEventListener('click', () => {
+            const questionMarks = document.querySelectorAll('.question-mark');
+            questionMarks.forEach((mark, index) => {
+                setTimeout(() => {
+                    mark.style.animationDelay = '0s';
+                    mark.style.animation = 'none';
+                    mark.offsetHeight; // Trigger reflow
+                    mark.style.animation = 'fallDown 2s ease-out forwards';
+                }, index * 100);
+            });
+        });
+
+        // Reset question marks animation
+        setInterval(() => {
+            const questionMarks = document.querySelectorAll('.question-mark');
+            questionMarks.forEach((mark, index) => {
+                mark.style.animation = `fallDown 3s infinite ease-in-out`;
+                mark.style.animationDelay = `${index * 0.5}s`;
+            });
+        }, 10000);
+    </script>
+</body>
+</html>
