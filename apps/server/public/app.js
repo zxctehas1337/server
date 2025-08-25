@@ -144,6 +144,22 @@ function resetToLogin() {
   usernameInput.focus();
   
   showStatus('Connection lost. Please login again.', 'error');
+
+  // Clear any invitation UI/state so it won't cover the login screen
+  try {
+    if (typeof hideInvitationModal === 'function') hideInvitationModal();
+    if (typeof hideInvitationNotification === 'function') hideInvitationNotification();
+  } catch (e) {}
+  try {
+    if (typeof pendingInvitations !== 'undefined' && pendingInvitations && pendingInvitations.clear) {
+      pendingInvitations.clear();
+    }
+  } catch (e) {}
+  try {
+    if (typeof currentInvite !== 'undefined') {
+      currentInvite = null;
+    }
+  } catch (e) {}
 }
 
 // Utility Functions
@@ -748,6 +764,8 @@ function hideInvitationNotification() {
 
 // Handle invitation response
 function respondToInvite(accepted) {
+  // If not logged in, do nothing
+  if (!currentUser) return;
   if (!currentInvite) return;
   
   const invite = currentInvite;
@@ -807,6 +825,11 @@ invitationModal.addEventListener('click', (e) => {
 socket.on('private_invitation', (invite) => {
   console.log('Received private chat invitation:', invite);
   
+  // Ignore invitations before successful login
+  if (!currentUser) {
+    return;
+  }
+
   if (!invite || !invite.inviteId || !invite.fromUser) {
     console.error('Invalid invitation data:', invite);
     return;
