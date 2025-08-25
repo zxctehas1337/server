@@ -28,11 +28,17 @@
     "@kracken/shared-db": "*",
     "@kracken/shared-types": "*",
     "@kracken/config": "*",
+    "bcrypt": "^5.1.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "hpp": "^0.2.3",
+    "pino": "^9.4.0",
     "pg": "^8.16.3",
-    "socket.io": "^4.8.1",
-    "sqlite3": "^5.1.7"
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

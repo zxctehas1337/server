@@ -1,4 +1,11 @@
 const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
+const pino = require('pino');
+const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { Pool } = require('pg');
@@ -33,36 +40,47 @@ pool.connect((err, client, release) => {
 const publicPath = path.resolve(process.cwd(), 'apps/server/public');
 const indexPath = path.resolve(publicPath, 'index.html');
 
-console.log('Static files path:', publicPath);
-console.log('Index file path:', indexPath);
-console.log('Current working directory:', process.cwd());
-console.log('__dirname:', __dirname);
+logger.info({ publicPath }, 'Static files path');
+logger.info({ indexPath }, 'Index file path');
+logger.debug({ cwd: process.cwd(), dirname: __dirname }, 'Process directories');
 
 // Проверяем существование критических файлов
 try {
     const publicExists = fs.existsSync(publicPath);
     const indexExists = fs.existsSync(indexPath);
     
-    console.log('Public directory exists:', publicExists);
-    console.log('Index.html exists:', indexExists);
+    logger.info({ publicExists, indexExists }, 'Public and index existence');
     
     if (publicExists) {
         const files = fs.readdirSync(publicPath);
-        console.log('Files in public directory:', files);
+        logger.debug({ files }, 'Files in public directory');
     }
     
     if (!indexExists) {
-        console.error('❌ CRITICAL: index.html not found at:', indexPath);
-        console.error('Available files in current directory:', fs.readdirSync(__dirname));
+        logger.error({ indexPath, files: fs.readdirSync(__dirname) }, 'CRITICAL: index.html not found');
     } else {
-        console.log('✅ index.html found successfully');
+        logger.info('index.html found successfully');
     }
 } catch (error) {
-    console.error('Error checking files:', error.message);
+    logger.error({ err: error }, 'Error checking files');
 }
 
-app.use(express.static(publicPath));
-app.use(express.json());
+// Security middleware stack
+app.use(helmet({
+    contentSecurityPolicy: false
+}));
+
+const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').filter(Boolean);
+app.use(cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    credentials: true
+}));
+
+app.use(hpp());
+app.use(compression());
+app.use(rateLimit({ windowMs: 60 * 1000, max: 120 }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.static(publicPath, { maxAge: '1h', etag: true, lastModified: true }));
 
 // Store connected users
 const connectedUsers = new Map(); // socketId -> { username, userId, roomId }
@@ -105,7 +123,8 @@ app.get('/api', (req, res) => {
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     // --- Приватные чаты: приглашения и ответы ---
-    socket.on('private_chat_invite', (data) => {
+    // Unified invite event names
+    socket.on('private_invite', (data) => {
         // data: { toUserId, fromUser }
         // Найти сокет приглашённого пользователя
         let targetSocketId = null;
@@ -116,11 +135,16 @@ io.on('connection', (socket) => {
             }
         }
         if (targetSocketId) {
-            io.to(targetSocketId).emit('private_chat_invite', { fromUser: data.fromUser });
+            const invitePayload = {
+                inviteId: `inv-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                roomId: `private_${Math.min(data.fromUser.id, data.toUserId)}_${Math.max(data.fromUser.id, data.toUserId)}`,
+                fromUser: data.fromUser
+            };
+            io.to(targetSocketId).emit('private_invitation', invitePayload);
         }
     });
 
-    socket.on('private_chat_response', (data) => {
+    socket.on('private_invite_response', (data) => {
         // data: { accepted, fromUserId, toUser }
         // Найти сокет инициатора приглашения
         let initiatorSocketId = null;
@@ -131,27 +155,48 @@ io.on('connection', (socket) => {
             }
         }
         if (initiatorSocketId) {
-            io.to(initiatorSocketId).emit('private_chat_response', {
+            io.to(initiatorSocketId).emit('invitation_response_ack', {
                 accepted: data.accepted,
                 toUser: data.toUser,
                 fromUserId: data.fromUserId
             });
         }
     });
-    console.log(`User connected: ${socket.id}`);
+    logger.info({ socketId: socket.id }, 'User connected');
     
     // Handle username setting
     socket.on('set_username', async (data) => {
         try {
             const { username, password } = data;
-            
-            // For MVP, we'll create user if not exists (simplified authentication)
-            const userResult = await pool.query(
-                'INSERT INTO users (username, password_hash) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username RETURNING id, username',
-                [username, password] // In production, hash the password!
-            );
-            
-            const user = userResult.rows[0];
+
+            if (!username || !password || username.length < 3 || password.length < 4) {
+                socket.emit('username_set', { success: false, error: 'Invalid credentials' });
+                return;
+            }
+
+            const bcrypt = require('bcrypt');
+            const saltRounds = 10;
+
+            // Try to find existing user
+            const existing = await pool.query('SELECT id, username, password_hash FROM users WHERE username = $1', [username]);
+            let user;
+            if (existing.rows.length === 0) {
+                // Create new user with hashed password
+                const hash = await bcrypt.hash(password, saltRounds);
+                const insert = await pool.query(
+                    'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username',
+                    [username, hash]
+                );
+                user = insert.rows[0];
+            } else {
+                // Verify password
+                const ok = await bcrypt.compare(password, existing.rows[0].password_hash);
+                if (!ok) {
+                    socket.emit('username_set', { success: false, error: 'Invalid username or password' });
+                    return;
+                }
+                user = { id: existing.rows[0].id, username: existing.rows[0].username };
+            }
             
             // Generate avatar URL
             const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username.toLowerCase())}&backgroundColor=6366f1`;
@@ -202,10 +247,10 @@ io.on('connection', (socket) => {
                 message: `${user.username} joined the chat`
             });
             
-            console.log(`User ${username} (${user.id}) connected on socket ${socket.id}`);
+            logger.info({ username, userId: user.id, socketId: socket.id }, 'User authenticated');
             
         } catch (error) {
-            console.error('Error setting username:', error);
+            logger.error({ err: error }, 'Error setting username');
             socket.emit('username_set', {
                 success: false,
                 error: 'Username already taken or server error'
@@ -289,7 +334,7 @@ io.on('connection', (socket) => {
             });
             
         } catch (error) {
-            console.error('Error joining room:', error);
+            logger.error({ err: error }, 'Error joining room');
             socket.emit('error', { message: 'Failed to join room' });
         }
     });
@@ -370,10 +415,10 @@ io.on('connection', (socket) => {
                 io.to(`room_${targetRoomId}`).emit('new_message', messageData);
             }
             
-            console.log(`Message from ${userInfo.username} in room ${targetRoomId}: ${content}`);
+            logger.debug({ username: userInfo.username, roomId: targetRoomId }, 'Message sent');
             
         } catch (error) {
-            console.error('Error sending message:', error);
+            logger.error({ err: error }, 'Error sending message');
             socket.emit('error', { message: 'Failed to send message' });
         }
     });
@@ -383,13 +428,13 @@ io.on('connection', (socket) => {
         const userInfo = connectedUsers.get(socket.id);
         
         if (userInfo) {
-            console.log(`User ${userInfo.username} disconnected`);
+            logger.info({ username: userInfo.username }, 'User disconnected');
             
             // Update last seen in database
             pool.query(
                 'UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = $1',
                 [userInfo.userId]
-            ).catch(err => console.error('Error updating last_seen:', err));
+            ).catch(err => logger.error({ err }, 'Error updating last_seen'));
             
             // Remove user from connected users
             connectedUsers.delete(socket.id);
@@ -403,29 +448,31 @@ io.on('connection', (socket) => {
                 message: `${userInfo.username} left the chat`
             });
         } else {
-            console.log(`Anonymous user disconnected: ${socket.id}`);
+            logger.info({ socketId: socket.id }, 'Anonymous user disconnected');
         }
     });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    logger.error({ err }, 'Unhandled error');
     res.status(500).send('Something went wrong!');
 });
 
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Visit http://localhost:${PORT} to access the messenger`);
+    logger.info({ port: PORT }, 'Server running');
 });
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('Shutting down gracefully...');
+async function shutdown() {
+    logger.info('Shutting down gracefully...');
     await pool.end();
     server.close(() => {
         process.exit(0);
     });
-});
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

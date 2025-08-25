@@ -21,6 +21,7 @@
     "build:web": "npm run build --workspace=@kracken/web",
     "build:desktop": "npm run build --workspace=@kracken/desktop",
     "build:desktop:win": "npm run build:win --workspace=@kracken/desktop",
+    "build:mac": "electron-builder --mac",
     "build:desktop:linux": "npm run build:linux --workspace=@kracken/desktop",
     "db:init": "npm run init-db --workspace=@kracken/server",
     "db:migrate": "npm run migrate-db --workspace=@kracken/server",
@@ -44,9 +45,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "electron": "37.3.1",
+    "electron-builder": "^26.0.12",
     "concurrently": "^9.2.0",
     "cross-env": "^10.0.0",
     "nodemon": "^3.1.10"
+    
   },
   "engines": {
     "node": ">=16.0.0",

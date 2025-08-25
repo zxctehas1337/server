@@ -1,18 +1,12 @@
 // Socket.IO client connection with Firefox compatibility options
 const socket = io({
-  // Force WebSocket transport for consistency across browsers
   transports: ['websocket', 'polling'],
-  // Increase timeout for Firefox
   timeout: 20000,
-  // Enable debugging
-  debug: true,
-  // Ensure proper reconnection
   reconnection: true,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  maxReconnectionAttempts: 3,
-  // Force JSON protocol
-  forceJSONP: false
+  // Exponential backoff
+  reconnectionDelay: 500,
+  reconnectionDelayMax: 8000,
+  randomizationFactor: 0.5,
 });
 
 // DOM Elements
@@ -763,7 +757,7 @@ function respondToInvite(accepted) {
   declineInvitationBtn.disabled = true;
   
   // Send response to server
-  socket.emit('invitation_response', {
+  socket.emit('private_invite_response', {
     inviteId: invite.inviteId,
     accepted: accepted
   });

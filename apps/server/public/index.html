@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kracken Messenger</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://api.dicebear.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self' ws: wss: https:; media-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -151,8 +154,8 @@
     </div>
 
     <!-- Socket.IO Client Library -->
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="/socket.io/socket.io.js" defer></script>
     <!-- Main Application Script -->
-    <script src="app.js"></script>
+    <script src="app.js" defer></script>
 </body>
 </html>
