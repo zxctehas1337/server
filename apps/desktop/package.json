@@ -10,6 +10,7 @@
     "server": "cd ../server && npm run dev",
     "build": "electron-builder --publish never",
     "build:win": "electron-builder --win --publish never",
+    "build:mac": "electron-builder --mac zip --publish never",
     "build:linux": "electron-builder --linux --publish never",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,14 +23,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@kracken/shared-ui": "*",
+    "@kracken/config": "*",
     "@kracken/shared-types": "*",
-    "@kracken/config": "*"
+    "@kracken/shared-ui": "*"
   },
   "devDependencies": {
     "concurrently": "^9.2.0",
     "cross-env": "^10.0.0",
-    "electron": "^37.3.1",
+    "electron": "37.3.1",
     "electron-builder": "^26.0.12"
   },
   "build": {
@@ -46,10 +47,14 @@
     },
     "asar": false,
     "linux": {
-      "target": [{
-        "target": "AppImage",
-        "arch": ["x64"]
-      }],
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "category": "Network",
       "icon": "resources/icons/linux/icon.png",
       "desktop": {
@@ -61,11 +66,20 @@
       }
     },
     "win": {
-      "target": [{
-        "target": "nsis",
-        "arch": ["x64"]
-      }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "icon": "resources/icons/win/icon.ico"
+    },
+    "mac": {
+      "target": [ "zip" ],
+      "icon": "resources/icons/mac/icon.icns"
+    }
     },
     "nsis": {
       "oneClick": false,
@@ -76,4 +90,3 @@
       "uninstallerIcon": "resources/icons/win/icon.ico"
     }
   }
-}
