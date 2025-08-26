@@ -279,9 +279,9 @@ app.get('/status', async (req, res) => {
 
 // --- Admin utilities ---
 function adminGuard(req, res, next) {
-    const token = req.get('X-Admin-Token') || req.query.adminToken;
-    const expected = process.env.ADMIN_TOKEN || 'dev-admin-token';
-    if (!token || token !== expected) {
+    const password = req.get('X-Admin-Password') || req.query.adminPassword;
+    const expected = '909the909';
+    if (!password || password !== expected) {
         return res.status(401).json({ success: false, error: 'Unauthorized' });
     }
     next();
