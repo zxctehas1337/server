@@ -39,6 +39,7 @@ const backToRegisterBtn = document.getElementById('backToRegisterBtn');
 // OAuth buttons
 const githubLoginBtn = document.getElementById('githubLoginBtn');
 const githubLoginFromRegisterBtn = document.getElementById('githubLoginFromRegisterBtn');
+const emailLoginBtn = document.getElementById('emailLoginBtn');
 
 // Other elements
 const messageInput = document.getElementById('messageInput');
@@ -437,6 +438,10 @@ socket.on('token_auth_success', (data) => {
   }
 });
 
+socket.on('token_auth_error', (data) => {
+  showStatus(data.error || 'Ошибка аутентификации по токену', 'error');
+});
+
 socket.on('new_message', (messageData) => {
   const isOwnMessage = currentUser && messageData.userId === currentUser.id;
   addMessage(messageData, isOwnMessage);
@@ -826,6 +831,11 @@ githubLoginBtn.addEventListener('click', () => {
 
 githubLoginFromRegisterBtn.addEventListener('click', () => {
   window.location.href = '/api/auth/github';
+});
+
+// Email login handler
+emailLoginBtn.addEventListener('click', () => {
+  showRegisterForm();
 });
 
 // Auto-focus on username input when page loads

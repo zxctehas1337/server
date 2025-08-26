@@ -93,6 +93,54 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// GitHub OAuth endpoint
+app.get('/api/auth/github', (req, res) => {
+    // Redirect to GitHub OAuth
+    const clientId = process.env.GITHUB_CLIENT_ID || 'your-github-client-id';
+    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
+    
+    res.redirect(githubAuthUrl);
+});
+
+app.get('/api/auth/github/callback', (req, res) => {
+    const { code } = req.query;
+    
+    if (!code) {
+        return res.redirect('/?error=github_auth_failed');
+    }
+    
+    // In a real implementation, you would exchange the code for an access token
+    // and fetch user data from GitHub API
+    // For now, we'll simulate a successful login
+    
+    const mockUser = {
+        id: Date.now(),
+        username: `github_user_${Date.now()}`,
+        email: `github_${Date.now()}@example.com`,
+        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}&backgroundColor=6366f1`
+    };
+    
+    // Store user in database
+    db.run(
+        `INSERT OR REPLACE INTO users (username, email, github_id, avatar_url, email_verified, is_oauth_user) 
+         VALUES (?, ?, ?, ?, 1, 1)`,
+        [mockUser.username, mockUser.email, mockUser.id.toString(), mockUser.avatar_url],
+        function(err) {
+            if (err) {
+                console.error('Error saving GitHub user:', err);
+                return res.redirect('/?error=github_auth_failed');
+            }
+            
+            // Generate a simple token (in production, use JWT)
+            const token = Buffer.from(JSON.stringify(mockUser)).toString('base64');
+            
+            // Redirect back to the app with token
+            res.redirect(`/?token=${token}`);
+        }
+    );
+});
+
 // API endpoints for authentication
 app.post('/api/auth/register', (req, res) => {
     const { username, email, password } = req.body;
@@ -231,6 +279,83 @@ app.post('/api/auth/resend-code', (req, res) => {
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
     
+    // Handle token authentication (for OAuth users)
+    socket.on('authenticate_with_token', (data) => {
+        const { token } = data;
+        
+        if (!token) {
+            socket.emit('token_auth_error', { error: 'Token is required' });
+            return;
+        }
+        
+        try {
+            const userData = JSON.parse(Buffer.from(token, 'base64').toString());
+            
+            // Find user in database
+            db.get(
+                'SELECT id, username, email, avatar_url, email_verified FROM users WHERE username = ?',
+                [userData.username],
+                (err, user) => {
+                    if (err) {
+                        socket.emit('token_auth_error', { error: 'Database error' });
+                        return;
+                    }
+                    
+                    if (!user) {
+                        socket.emit('token_auth_error', { error: 'User not found' });
+                        return;
+                    }
+                    
+                    // Update last seen
+                    db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
+                    
+                    // Store user info for this socket
+                    connectedUsers.set(socket.id, {
+                        username: user.username,
+                        userId: user.id,
+                        roomId: 1
+                    });
+                    
+                    // Initialize user rooms
+                    if (!userRooms.has(user.id)) {
+                        userRooms.set(user.id, new Set([1]));
+                    }
+                    
+                    // Join user to general room
+                    socket.join('room_1');
+                    
+                    // Send success response
+                    socket.emit('token_auth_success', {
+                        success: true,
+                        user: {
+                            id: user.id,
+                            username: user.username,
+                            avatar_url: user.avatar_url,
+                            email: user.email,
+                            email_verified: user.email_verified
+                        }
+                    });
+                    
+                    // Add user to general chat room
+                    db.run('INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
+                    
+                    // Broadcast online users
+                    broadcastOnlineUsers();
+                    
+                    // Notify others
+                    socket.broadcast.emit('user_joined', {
+                        username: user.username,
+                        message: `${user.username} joined the chat`
+                    });
+                    
+                    console.log(`User authenticated with token: ${user.username} (ID: ${user.id})`);
+                }
+            );
+        } catch (error) {
+            socket.emit('token_auth_error', { error: 'Invalid token' });
+        }
+    });
+
     // Handle login (only for existing users)
     socket.on('login', (data) => {
         const { username, password } = data;
@@ -319,70 +444,6 @@ io.on('connection', (socket) => {
                     
                     console.log(`User logged in: ${user.username} (ID: ${user.id})`);
                 });
-            }
-        );
-    });
-        
-        db.run(
-            "INSERT OR IGNORE INTO users (username, password_hash, avatar_url) VALUES (?, ?, ?)",
-            [username, password, avatarUrl],
-            function(err) {
-                if (err) {
-                    socket.emit('username_set', {
-                        success: false,
-                        error: 'Error creating user'
-                    });
-                    return;
-                }
-                
-                // Get user info
-                db.get(
-                    "SELECT id, username, avatar_url FROM users WHERE username = ?",
-                    [username],
-                    (err, user) => {
-                        if (err || !user) {
-                            socket.emit('username_set', {
-                                success: false,
-                                error: 'User not found'
-                            });
-                            return;
-                        }
-                        
-                        // Store user info
-                        connectedUsers.set(socket.id, {
-                            username: user.username,
-                            userId: user.id,
-                            roomId: 1
-                        });
-                        
-                        // Join general room
-                        socket.join('room_1');
-                        
-                        // Add to room participants
-                        db.run(
-                            "INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)",
-                            [user.id]
-                        );
-                        
-                        socket.emit('username_set', {
-                            success: true,
-                            user: {
-                                id: user.id,
-                                username: user.username,
-                                avatar_url: user.avatar_url
-                            }
-                        });
-                        
-                        // Update online users
-                        broadcastOnlineUsers();
-                        
-                        // Notify others
-                        socket.broadcast.emit('user_joined', {
-                            username: user.username,
-                            message: `${user.username} joined the chat`
-                        });
-                    }
-                );
             }
         );
     });

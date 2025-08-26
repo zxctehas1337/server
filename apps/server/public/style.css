@@ -323,6 +323,7 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   margin-bottom: 1rem;
+  text-decoration: none;
 }
 
 .oauth-btn:hover {
@@ -342,9 +343,21 @@ body {
   border-color: #1f2328;
 }
 
-.github-icon {
+.email-btn {
+  background: #6366f1;
+  color: white;
+  border-color: #6366f1;
+}
+
+.email-btn:hover {
+  background: #5855eb;
+  border-color: #5855eb;
+}
+
+.github-icon, .email-icon {
   width: 20px;
   height: 20px;
+  flex-shrink: 0;
 }
 
 /* Divider */
