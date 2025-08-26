@@ -12,8 +12,7 @@
     "migrate-db": "node scripts/migrate-db.js",
     "migrate": "node scripts/migrate-db.js",
     "reset-db": "node scripts/reset-db.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "npm run init-db"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "messenger",
@@ -25,9 +24,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@kracken/config": "*",
     "@kracken/shared-db": "*",
     "@kracken/shared-types": "*",
-    "@kracken/config": "*",
     "bcrypt": "^5.1.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
@@ -36,9 +35,15 @@
     "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
     "hpp": "^0.2.3",
-    "pino": "^9.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^6.9.7",
+    "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
     "pg": "^8.16.3",
-    "socket.io": "^4.8.1"
+    "pino": "^9.4.0",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

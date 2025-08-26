@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kracken Admin & API Tester</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --accent: #22c55e;
+      --warn: #eab308;
+      --danger: #ef4444;
+      --link: #60a5fa;
+      --input: #0b1220;
+      --border: #1f2937;
+      --ok: #16a34a;
+      --bad: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.4;
+    }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: linear-gradient(180deg, rgba(17,24,39,0.8), rgba(17,24,39,0.6));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    h1 { margin: 0; font-size: 20px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(12, 1fr); }
+    .card {
+      grid-column: span 12;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    @media (min-width: 900px) {
+      .span-6 { grid-column: span 6; }
+      .span-4 { grid-column: span 4; }
+      .span-8 { grid-column: span 8; }
+    }
+    .card h2 { margin: 0 0 10px; font-size: 16px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .col { display: flex; flex-direction: column; gap: 6px; }
+    label { color: var(--muted); font-size: 12px; }
+    input, select, textarea {
+      background: var(--input);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      width: 100%;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    pre {
+      margin: 0; padding: 12px; border-radius: 8px; overflow: auto;
+      background: #0a0f1a; border: 1px solid var(--border);
+    }
+    .btn {
+      background: #0b1a10;
+      color: var(--accent);
+      border: 1px solid rgba(34,197,94,0.25);
+      padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.warn { background: #1a170b; color: var(--warn); border-color: rgba(234,179,8,0.25); }
+    .btn.danger { background: #1a0b0b; color: var(--danger); border-color: rgba(239,68,68,0.25); }
+    .stat { display: inline-flex; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 999px; background: #0a0f1a; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .dot.ok { background: var(--ok); box-shadow: 0 0 12px rgba(22,163,74,0.6); }
+    .dot.bad { background: var(--bad); box-shadow: 0 0 12px rgba(220,38,38,0.6); }
+    .muted { color: var(--muted); }
+    .hr { height: 1px; background: var(--border); margin: 12px 0; }
+    .pill { padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); background: #0a0f1a; font-size: 12px; }
+    .kvs { display: grid; grid-template-columns: 160px 1fr; gap: 6px 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap row" style="justify-content: space-between;">
+      <h1>⚡ Kracken Admin & Tester</h1>
+      <div class="row">
+        <span class="muted">Прод сервер:</span>
+        <a href="https://beckend-yaj1.onrender.com/" target="_blank" rel="noreferrer">beckend-yaj1.onrender.com</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <section class="card span-4" id="serverCheck">
+        <h2>Чек сервера</h2>
+        <div class="col">
+          <div class="row" style="justify-content: space-between;">
+            <div class="row stat"><span class="dot" id="statusDot"></span><span id="statusText">Неизвестно</span></div>
+            <button class="btn" id="btnPing">Пинг</button>
+          </div>
+          <div class="kvs">
+            <div class="muted">База URL</div>
+            <div class="row"><input id="baseUrl" value="https://beckend-yaj1.onrender.com" /></div>
+            <div class="muted">Health</div>
+            <div class="row"><code>/api/health</code> <button class="btn" id="btnHealth">Проверить</button></div>
+          </div>
+          <div class="hr"></div>
+          <label>Ответ</label>
+          <pre id="healthOut">—</pre>
+        </div>
+      </section>
+
+      <section class="card span-8" id="apiTester">
+        <h2>Тест API</h2>
+        <div class="row">
+          <select id="reqMethod" style="max-width: 120px;">
+            <option>GET</option>
+            <option>POST</option>
+            <option>PUT</option>
+            <option>PATCH</option>
+            <option>DELETE</option>
+          </select>
+          <input id="reqPath" value="/api/health" placeholder="/api/health" />
+          <button class="btn" id="btnSend">Отправить</button>
+        </div>
+        <div class="row" style="margin-top: 8px; align-items: flex-start;">
+          <div class="col" style="flex: 1;">
+            <label>Заголовки (JSON)</label>
+            <textarea id="reqHeaders" placeholder='{"Content-Type":"application/json"}'>{
+  "Content-Type": "application/json"
+}</textarea>
+          </div>
+          <div class="col" style="flex: 1;">
+            <label>Тело (JSON)</label>
+            <textarea id="reqBody" placeholder='{"key":"value"}'></textarea>
+          </div>
+        </div>
+        <div class="hr"></div>
+        <div class="row" style="gap: 16px; flex-wrap: nowrap; align-items: flex-start;">
+          <div class="col" style="flex: 1;">
+            <label>Ответ</label>
+            <pre id="respOut">—</pre>
+          </div>
+          <div class="col" style="width: 260px;">
+            <label>Статус</label>
+            <div class="row stat" id="respStat"><span class="dot"></span><span class="muted">—</span></div>
+            <div class="hr"></div>
+            <div class="kvs">
+              <div class="muted">HTTP</div><div><span id="httpCode" class="pill">—</span></div>
+              <div class="muted">Время</div><div><span id="httpTime" class="pill">—</span></div>
+              <div class="muted">Размер</div><div><span id="httpSize" class="pill">—</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card span-6" id="authTest">
+        <h2>Тест авторизации</h2>
+        <div class="row">
+          <div class="col" style="flex: 1;">
+            <label>Логин</label>
+            <input id="loginUsername" placeholder="username" />
+          </div>
+          <div class="col" style="flex: 1;">
+            <label>Пароль</label>
+            <input id="loginPassword" type="password" placeholder="password" />
+          </div>
+        </div>
+        <div class="row" style="margin-top: 8px;">
+          <button class="btn" id="btnRegister">Регистрация</button>
+          <button class="btn" id="btnLogin">Вход</button>
+          <button class="btn warn" id="btnClearToken">Сброс токена</button>
+        </div>
+        <div class="hr"></div>
+        <label>Результат</label>
+        <pre id="authOut">—</pre>
+      </section>
+
+      <section class="card span-6" id="wsTest">
+        <h2>Тест мессенджера (WebSocket)</h2>
+        <div class="col" style="gap: 8px;">
+          <label>WS URL</label>
+          <input id="wsUrl" value="wss://beckend-yaj1.onrender.com" />
+          <div class="row">
+            <button class="btn" id="btnWsConnect">Подключиться</button>
+            <button class="btn warn" id="btnWsClose" disabled>Отключить</button>
+          </div>
+          <div class="row" style="align-items: flex-start; gap: 12px;">
+            <div class="col" style="flex:1;">
+              <label>Сообщение</label>
+              <input id="wsMsg" placeholder='{"type":"ping"}' />
+            </div>
+            <button class="btn" id="btnWsSend" disabled>Отправить</button>
+          </div>
+          <div class="hr"></div>
+          <label>Логи</label>
+          <pre id="wsLog" style="min-height: 160px;">—</pre>
+        </div>
+      </section>
+
+      <section class="card span-12" id="adminTools">
+        <h2>Админ-инструменты</h2>
+        <div class="row" style="align-items: flex-end; gap: 12px; flex-wrap: wrap;">
+          <div class="col" style="min-width: 260px;">
+            <label>Admin Password (заголовок X-Admin-Password)</label>
+            <input id="adminToken" placeholder="введите admin password" />
+          </div>
+          <button class="btn danger" id="btnAdminDeleteMessages">Удалить все сообщения</button>
+          <button class="btn danger" id="btnAdminDeleteUsers">Удалить всех пользователей</button>
+          <button class="btn" id="btnAdminShowLogs">Показать логи</button>
+          <button class="btn warn" id="btnAdminClearLogs">Очистить логи</button>
+        </div>
+        <div class="hr"></div>
+        <label>Результат</label>
+        <pre id="adminOut">—</pre>
+        <div class="hr"></div>
+        <label>Логи сервера</label>
+        <pre id="adminLogsOut" style="max-height: 280px; overflow: auto;">—</pre>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    const qs = (sel) => document.querySelector(sel);
+    const baseUrlEl = qs('#baseUrl');
+    const statusDot = qs('#statusDot');
+    const statusText = qs('#statusText');
+    const healthOut = qs('#healthOut');
+    const btnPing = qs('#btnPing');
+    const btnHealth = qs('#btnHealth');
+
+    const methodEl = qs('#reqMethod');
+    const pathEl = qs('#reqPath');
+    const headersEl = qs('#reqHeaders');
+    const bodyEl = qs('#reqBody');
+    const btnSend = qs('#btnSend');
+    const respOut = qs('#respOut');
+    const respStat = qs('#respStat');
+    const httpCode = qs('#httpCode');
+    const httpTime = qs('#httpTime');
+    const httpSize = qs('#httpSize');
+
+    const loginUsername = qs('#loginUsername');
+    const loginPassword = qs('#loginPassword');
+    const btnRegister = qs('#btnRegister');
+    const btnLogin = qs('#btnLogin');
+    const btnClearToken = qs('#btnClearToken');
+    const authOut = qs('#authOut');
+
+    const wsUrl = qs('#wsUrl');
+    const btnWsConnect = qs('#btnWsConnect');
+    const btnWsClose = qs('#btnWsClose');
+    const btnWsSend = qs('#btnWsSend');
+    const wsMsg = qs('#wsMsg');
+    const wsLog = qs('#wsLog');
+
+    // Admin controls
+    let adminTokenEl, btnDelMsgs, btnDelUsers, adminOut, btnShowLogs, btnClearLogs, adminLogsOut;
+    adminTokenEl = document.getElementById('adminToken');
+    btnDelMsgs = document.getElementById('btnAdminDeleteMessages');
+    btnDelUsers = document.getElementById('btnAdminDeleteUsers');
+    adminOut = document.getElementById('adminOut');
+    btnShowLogs = document.getElementById('btnAdminShowLogs');
+    btnClearLogs = document.getElementById('btnAdminClearLogs');
+    adminLogsOut = document.getElementById('adminLogsOut');
+
+    async function doAdminDelete(path) {
+      const base = baseUrlEl.value.replace(/\/$/, '');
+      const token = (adminTokenEl && adminTokenEl.value) || '';
+      if (adminOut) adminOut.textContent = '…';
+      try {
+        const res = await fetch(base + path, {
+          method: 'POST',
+          headers: token ? { 'X-Admin-Password': token } : {}
+        });
+        const text = await res.text();
+        const pretty = await safeJson(text);
+        if (adminOut) adminOut.textContent = `${res.status} ${res.statusText}\n\n${pretty}`;
+      } catch (e) {
+        if (adminOut) adminOut.textContent = String(e);
+      }
+    }
+
+    async function doAdminShowLogs() {
+      const base = baseUrlEl.value.replace(/\/$/, '');
+      const token = (adminTokenEl && adminTokenEl.value) || '';
+      if (adminLogsOut) adminLogsOut.textContent = '…';
+      try {
+        const res = await fetch(base + '/api/admin/logs?limit=500', {
+          headers: token ? { 'X-Admin-Password': token } : {}
+        });
+        const text = await res.text();
+        let pretty = text;
+        try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+        if (adminLogsOut) adminLogsOut.textContent = pretty;
+      } catch (e) {
+        if (adminLogsOut) adminLogsOut.textContent = String(e);
+      }
+    }
+
+    async function doAdminClearLogs() {
+      const base = baseUrlEl.value.replace(/\/$/, '');
+      const token = (adminTokenEl && adminTokenEl.value) || '';
+      try {
+        const res = await fetch(base + '/api/admin/clear-logs', {
+          method: 'POST',
+          headers: token ? { 'X-Admin-Password': token } : {}
+        });
+        const text = await res.text();
+        let pretty = text;
+        try { pretty = JSON.stringify(JSON.parse(text), null, 2); } catch {}
+        if (adminOut) adminOut.textContent = `${res.status} ${res.statusText}\n\n${pretty}`;
+        if (adminLogsOut) adminLogsOut.textContent = '—';
+      } catch (e) {
+        if (adminOut) adminOut.textContent = String(e);
+      }
+    }
+
+    const getToken = () => localStorage.getItem('kracken_token') || '';
+    const setToken = (t) => localStorage.setItem('kracken_token', t || '');
+
+    function setServerStatus(ok, text) {
+      statusDot.classList.toggle('ok', !!ok);
+      statusDot.classList.toggle('bad', !ok);
+      statusText.textContent = text || (ok ? 'OK' : 'OFFLINE');
+    }
+
+    async function safeJson(text) {
+      try { return JSON.stringify(JSON.parse(text), null, 2); }
+      catch { return text; }
+    }
+
+    async function doHealth() {
+      const url = baseUrlEl.value.replace(/\/$/, '') + '/api/health';
+      healthOut.textContent = '…';
+      try {
+        const t0 = performance.now();
+        const res = await fetch(url, { method: 'GET' });
+        const t1 = performance.now();
+        const text = await res.text();
+        const pretty = await safeJson(text);
+        healthOut.textContent = `${res.status} ${res.statusText}\n${Math.round(t1 - t0)}ms\n\n${pretty}`;
+        setServerStatus(res.ok, res.ok ? 'Доступен' : `Ошибка: ${res.status}`);
+      } catch (e) {
+        healthOut.textContent = String(e);
+        setServerStatus(false, 'Нет ответа');
+      }
+    }
+
+    async function doPingOnly() {
+      const url = baseUrlEl.value.replace(/\/$/, '');
+      setServerStatus(false, 'Проверка…');
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(url + '/api/health', { signal: controller.signal });
+        clearTimeout(timer);
+        setServerStatus(res.ok, res.ok ? 'Доступен' : `Ошибка: ${res.status}`);
+      } catch (_) {
+        setServerStatus(false, 'Нет ответа');
+      }
+    }
+
+    async function doSend() {
+      const base = baseUrlEl.value.replace(/\/$/, '');
+      const path = pathEl.value.startsWith('/') ? pathEl.value : '/' + pathEl.value;
+      let headers = {};
+      try { headers = JSON.parse(headersEl.value || '{}'); } catch { headers = {}; }
+      const token = getToken();
+      if (token && !headers['Authorization']) headers['Authorization'] = `Bearer ${token}`;
+
+      let body = undefined;
+      if (['POST','PUT','PATCH','DELETE'].includes(methodEl.value)) {
+        const raw = bodyEl.value.trim();
+        if (raw) body = raw;
+      }
+
+      respOut.textContent = '…';
+      httpCode.textContent = '—';
+      httpTime.textContent = '—';
+      httpSize.textContent = '—';
+      const dot = respStat.querySelector('.dot');
+      const lbl = respStat.querySelector('span.muted');
+      dot.classList.remove('ok','bad');
+      lbl.textContent = '—';
+
+      try {
+        const t0 = performance.now();
+        const res = await fetch(base + path, { method: methodEl.value, headers, body });
+        const t1 = performance.now();
+        const text = await res.text();
+        const pretty = await safeJson(text);
+        respOut.textContent = pretty;
+        httpCode.textContent = res.status + ' ' + res.statusText;
+        httpTime.textContent = Math.round(t1 - t0) + 'ms';
+        httpSize.textContent = (new Blob([text]).size) + 'B';
+        dot.classList.add(res.ok ? 'ok' : 'bad');
+        lbl.textContent = res.ok ? 'Успех' : 'Ошибка';
+        try {
+          const j = JSON.parse(text);
+          if (j && (j.token || j.accessToken)) {
+            setToken(j.token || j.accessToken);
+          }
+        } catch {}
+      } catch (e) {
+        respOut.textContent = String(e);
+        dot.classList.add('bad');
+        lbl.textContent = 'Сбой запроса';
+      }
+    }
+
+    async function doAuth(kind) {
+      const base = baseUrlEl.value.replace(/\/$/, '');
+      const path = kind === 'register' ? '/api/auth/register' : '/api/auth/login';
+      authOut.textContent = '…';
+      try {
+        const res = await fetch(base + path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: loginUsername.value, password: loginPassword.value })
+        });
+        const text = await res.text();
+        const pretty = await safeJson(text);
+        authOut.textContent = pretty;
+        try {
+          const j = JSON.parse(text);
+          if (j && (j.token || j.accessToken)) {
+            setToken(j.token || j.accessToken);
+          }
+        } catch {}
+      } catch (e) {
+        authOut.textContent = String(e);
+      }
+    }
+
+    // WebSocket tester (generic). If your server uses Socket.IO, provide ws URL like wss://host/socket.io/?EIO=4&transport=websocket
+    let ws;
+    function logWs(line) {
+      const now = new Date().toLocaleTimeString();
+      wsLog.textContent = (wsLog.textContent === '—' ? '' : wsLog.textContent + "\n") + `[${now}] ${line}`;
+      wsLog.scrollTop = wsLog.scrollHeight;
+    }
+    function setWsState(connected) {
+      btnWsConnect.disabled = connected;
+      btnWsClose.disabled = !connected;
+      btnWsSend.disabled = !connected;
+    }
+
+    function connectWs() {
+      try {
+        const url = wsUrl.value.trim();
+        if (!/^wss?:\/\//i.test(url)) throw new Error('Неверный WS URL');
+        wsLog.textContent = '—';
+        logWs('Подключение…');
+        ws = new WebSocket(url);
+        ws.onopen = () => { logWs('Открыто'); setWsState(true); };
+        ws.onclose = (ev) => { logWs(`Закрыто (code=${ev.code})`); setWsState(false); };
+        ws.onerror = (ev) => { logWs('Ошибка'); };
+        ws.onmessage = (ev) => {
+          let data = ev.data;
+          try { data = JSON.stringify(JSON.parse(ev.data), null, 2); } catch {}
+          logWs('← ' + data);
+        };
+      } catch (e) {
+        logWs('Сбой: ' + e.message);
+      }
+    }
+    function closeWs() { if (ws) try { ws.close(1000, 'client-close'); } catch {} }
+    function sendWs() {
+      if (!ws || ws.readyState !== 1) { logWs('Нет соединения'); return; }
+      const text = wsMsg.value || '';
+      logWs('→ ' + text);
+      ws.send(text);
+    }
+
+    // Wire events
+    btnHealth.addEventListener('click', doHealth);
+    btnPing.addEventListener('click', doPingOnly);
+    btnSend.addEventListener('click', doSend);
+    btnRegister.addEventListener('click', () => doAuth('register'));
+    btnLogin.addEventListener('click', () => doAuth('login'));
+    btnClearToken.addEventListener('click', () => { setToken(''); authOut.textContent = 'Токен очищен'; });
+    btnWsConnect.addEventListener('click', connectWs);
+    btnWsClose.addEventListener('click', closeWs);
+    btnWsSend.addEventListener('click', sendWs);
+
+    if (btnDelMsgs) btnDelMsgs.addEventListener('click', () => doAdminDelete('/api/admin/delete-messages'));
+    if (btnDelUsers) btnDelUsers.addEventListener('click', () => doAdminDelete('/api/admin/delete-users'));
+    if (btnShowLogs) btnShowLogs.addEventListener('click', doAdminShowLogs);
+    if (btnClearLogs) btnClearLogs.addEventListener('click', doAdminClearLogs);
+
+    // Initial
+    doPingOnly();
+  </script>
+</body>
+</html>
+
+

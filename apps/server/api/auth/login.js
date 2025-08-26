@@ -1,6 +1,6 @@
-const { query } = require('../../utils/db');
-const { comparePassword } = require('../../utils/hash');
-const { success, badRequest, unauthorized, serverError } = require('../../utils/response');
+import { query } from '../../utils/db.js';
+import { comparePassword } from '../../utils/hash.js';
+import { success, badRequest, unauthorized, serverError } from '../../utils/response.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,24 +12,29 @@ export default async function handler(req, res) {
 
     // Validate input
     if (!username || !password) {
-      return badRequest(res, 'Username and password are required');
+      return badRequest(res, 'Имя пользователя и пароль обязательны');
     }
 
     // Find user
     const userResult = await query(
-      'SELECT id, username, password_hash, avatar_url, created_at, last_seen FROM users WHERE username = $1',
+      'SELECT id, username, password_hash, avatar_url, email, email_verified, created_at, last_seen FROM users WHERE username = $1',
       [username]
     );
 
     if (userResult.rows.length === 0) {
-      return unauthorized(res, 'Invalid username or password');
+      return unauthorized(res, 'Неверное имя пользователя или пароль');
     }
 
     const user = userResult.rows[0];
 
+    // Check if email is verified (for non-OAuth users)
+    if (user.email && !user.email_verified && !user.is_oauth_user) {
+      return unauthorized(res, 'Пожалуйста, подтвердите ваш email перед входом');
+    }
+
     // Verify password
     if (!comparePassword(password, user.password_hash)) {
-      return unauthorized(res, 'Invalid username or password');
+      return unauthorized(res, 'Неверное имя пользователя или пароль');
     }
 
     // Update last seen
@@ -59,6 +64,8 @@ export default async function handler(req, res) {
         id: user.id,
         username: user.username,
         avatar_url: user.avatar_url,
+        email: user.email,
+        email_verified: user.email_verified,
         created_at: user.created_at,
         last_seen: user.last_seen
       }
@@ -66,6 +73,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Login error:', error);
-    return serverError(res, 'Failed to login');
+    return serverError(res, 'Ошибка при входе');
   }
 }

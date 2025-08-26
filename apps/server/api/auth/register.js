@@ -1,6 +1,7 @@
-const { query } = require('../../utils/db');
-const { hashPassword } = require('../../utils/hash');
-const { success, badRequest, conflict, serverError } = require('../../utils/response');
+import { query } from '../../utils/db.js';
+import { hashPassword } from '../../utils/hash.js';
+import { sendVerificationEmail } from '../../utils/email.js';
+import { success, badRequest, serverError } from '../../utils/response.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,19 +9,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
 
-    // Validate input
-    if (!username || !password) {
-      return badRequest(res, 'Username and password are required');
+    // Validation
+    if (!username || !email || !password) {
+      return badRequest(res, 'Все поля обязательны для заполнения');
     }
 
-    if (username.length < 3 || username.length > 50) {
-      return badRequest(res, 'Username must be between 3 and 50 characters');
+    if (username.length < 3) {
+      return badRequest(res, 'Имя пользователя должно содержать минимум 3 символа');
     }
 
-    if (password.length < 4) {
-      return badRequest(res, 'Password must be at least 4 characters');
+    if (password.length < 6) {
+      return badRequest(res, 'Пароль должен содержать минимум 6 символов');
+    }
+
+    if (!email.includes('@')) {
+      return badRequest(res, 'Пожалуйста, введите корректный email');
     }
 
     // Check if username already exists
@@ -30,40 +35,50 @@ export default async function handler(req, res) {
     );
 
     if (existingUser.rows.length > 0) {
-      return conflict(res, 'Username already taken');
+      return badRequest(res, 'Пользователь с таким именем уже существует');
     }
 
-    // Hash password (currently plain text, matches existing behavior)
-    const hashedPassword = hashPassword(password);
-
-    // Generate avatar URL
-    const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username.toLowerCase())}&backgroundColor=6366f1`;
-
-    // Create user
-    const userResult = await query(
-      'INSERT INTO users (username, password_hash, avatar_url) VALUES ($1, $2, $3) RETURNING id, username, avatar_url, created_at',
-      [username, hashedPassword, avatarUrl]
+    // Check if email already exists
+    const existingEmail = await query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
     );
 
-    const user = userResult.rows[0];
+    if (existingEmail.rows.length > 0) {
+      return badRequest(res, 'Пользователь с таким email уже существует');
+    }
 
-    // Add user to general chat room (room_id = 1)
-    await query(
-      'INSERT INTO chat_room_participants (room_id, user_id) VALUES ($1, $2) ON CONFLICT (room_id, user_id) DO NOTHING',
-      [1, user.id]
+    // Hash password
+    const hashedPassword = await hashPassword(password);
+
+    // Generate verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Create user with email_verified = false
+    const newUser = await query(
+      `INSERT INTO users (username, email, password_hash, email_verified, verification_code, verification_code_expires) 
+       VALUES ($1, $2, $3, false, $4, NOW() + INTERVAL '15 minutes') 
+       RETURNING id, username, email`,
+      [username, email, hashedPassword, verificationCode]
     );
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(email, username, verificationCode);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Delete the user if email sending fails
+      await query('DELETE FROM users WHERE id = $1', [newUser.rows[0].id]);
+      return serverError(res, 'Ошибка при отправке email. Попробуйте позже.');
+    }
 
     return success(res, {
-      user: {
-        id: user.id,
-        username: user.username,
-        avatar_url: user.avatar_url,
-        created_at: user.created_at
-      }
-    }, 201);
+      message: 'Код подтверждения отправлен на ваш email',
+      userId: newUser.rows[0].id
+    });
 
   } catch (error) {
     console.error('Registration error:', error);
-    return serverError(res, 'Failed to register user');
+    return serverError(res, 'Ошибка при регистрации');
   }
 }

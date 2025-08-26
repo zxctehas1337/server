@@ -17,11 +17,17 @@ db.serialize(() => {
     db.run(`CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
+        password_hash TEXT,
+        email TEXT UNIQUE,
+        github_id TEXT UNIQUE,
         avatar_url TEXT,
-        theme_preference TEXT DEFAULT 'light',
+        email_verified INTEGER DEFAULT 0,
+        verification_code TEXT,
+        verification_code_expires DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        is_oauth_user INTEGER DEFAULT 0
     )`);
     
     // Chat rooms table
@@ -87,16 +93,235 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// API endpoints for authentication
+app.post('/api/auth/register', (req, res) => {
+    const { username, email, password } = req.body;
+    
+    if (!username || !email || !password) {
+        return res.status(400).json({ success: false, error: 'Все поля обязательны для заполнения' });
+    }
+    
+    if (username.length < 3) {
+        return res.status(400).json({ success: false, error: 'Имя пользователя должно содержать минимум 3 символа' });
+    }
+    
+    if (password.length < 6) {
+        return res.status(400).json({ success: false, error: 'Пароль должен содержать минимум 6 символов' });
+    }
+    
+    const bcrypt = require('bcrypt');
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    
+    bcrypt.hash(password, 10).then(hash => {
+        db.run(
+            `INSERT INTO users (username, email, password_hash, verification_code, verification_code_expires) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [username, email, hash, verificationCode, expiresAt.toISOString()],
+            function(err) {
+                if (err) {
+                    if (err.message.includes('UNIQUE constraint failed')) {
+                        return res.status(400).json({ success: false, error: 'Пользователь с таким именем или email уже существует' });
+                    }
+                    return res.status(500).json({ success: false, error: 'Ошибка при регистрации' });
+                }
+                
+                console.log(`Verification code for ${email}: ${verificationCode}`);
+                res.json({ success: true, message: 'Код подтверждения отправлен на ваш email' });
+            }
+        );
+    });
+});
+
+app.post('/api/auth/verify-email', (req, res) => {
+    const { code } = req.body;
+    
+    if (!code || code.length !== 6) {
+        return res.status(400).json({ success: false, error: 'Неверный код подтверждения' });
+    }
+    
+    db.get(
+        `SELECT id, username, email, verification_code, verification_code_expires 
+         FROM users 
+         WHERE verification_code = ? AND email_verified = 0`,
+        [code],
+        (err, user) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: 'Ошибка при проверке кода' });
+            }
+            
+            if (!user) {
+                return res.status(400).json({ success: false, error: 'Неверный код подтверждения' });
+            }
+            
+            if (new Date() > new Date(user.verification_code_expires)) {
+                return res.status(400).json({ success: false, error: 'Код подтверждения истек' });
+            }
+            
+            db.run(
+                `UPDATE users 
+                 SET email_verified = 1, 
+                     verification_code = NULL, 
+                     verification_code_expires = NULL,
+                     updated_at = CURRENT_TIMESTAMP
+                 WHERE id = ?`,
+                [user.id],
+                (err) => {
+                    if (err) {
+                        return res.status(500).json({ success: false, error: 'Ошибка при подтверждении email' });
+                    }
+                    
+                    // Add user to general chat room
+                    db.run(
+                        'INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)',
+                        [user.id]
+                    );
+                    
+                    res.json({ success: true, message: 'Email успешно подтвержден' });
+                }
+            );
+        }
+    );
+});
+
+app.post('/api/auth/resend-code', (req, res) => {
+    const { email } = req.body;
+    
+    if (!email || !email.includes('@')) {
+        return res.status(400).json({ success: false, error: 'Пожалуйста, введите корректный email' });
+    }
+    
+    db.get(
+        `SELECT id, username, email 
+         FROM users 
+         WHERE email = ? AND email_verified = 0`,
+        [email],
+        (err, user) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: 'Ошибка при поиске пользователя' });
+            }
+            
+            if (!user) {
+                return res.status(400).json({ success: false, error: 'Пользователь с таким email не найден' });
+            }
+            
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+            
+            db.run(
+                `UPDATE users 
+                 SET verification_code = ?, 
+                     verification_code_expires = ?
+                 WHERE id = ?`,
+                [verificationCode, expiresAt.toISOString(), user.id],
+                (err) => {
+                    if (err) {
+                        return res.status(500).json({ success: false, error: 'Ошибка при обновлении кода' });
+                    }
+                    
+                    console.log(`New verification code for ${email}: ${verificationCode}`);
+                    res.json({ success: true, message: 'Код подтверждения отправлен повторно' });
+                }
+            );
+        }
+    );
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log(`User connected: ${socket.id}`);
     
-    // Handle username setting
-    socket.on('set_username', (data) => {
+    // Handle login (only for existing users)
+    socket.on('login', (data) => {
         const { username, password } = data;
         
-        // Simple user creation/login
-        const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username.toLowerCase())}&backgroundColor=6366f1`;
+        if (!username || !password || username.length < 3 || password.length < 4) {
+            socket.emit('login_error', { error: 'Неверные учетные данные' });
+            return;
+        }
+        
+        const bcrypt = require('bcrypt');
+        
+        db.get(
+            'SELECT id, username, password_hash, email, email_verified, avatar_url FROM users WHERE username = ?',
+            [username],
+            (err, user) => {
+                if (err) {
+                    socket.emit('login_error', { error: 'Ошибка сервера при входе' });
+                    return;
+                }
+                
+                if (!user) {
+                    socket.emit('login_error', { error: 'Пользователь не найден. Зарегистрируйтесь через email или войдите через GitHub.' });
+                    return;
+                }
+                
+                // Check if email is verified (for non-OAuth users)
+                if (user.email && !user.email_verified && !user.is_oauth_user) {
+                    socket.emit('login_error', { error: 'Пожалуйста, подтвердите ваш email перед входом' });
+                    return;
+                }
+                
+                bcrypt.compare(password, user.password_hash, (err, isMatch) => {
+                    if (err || !isMatch) {
+                        socket.emit('login_error', { error: 'Неверное имя пользователя или пароль' });
+                        return;
+                    }
+                    
+                    // Generate avatar URL if not set
+                    let avatarUrl = user.avatar_url;
+                    if (!avatarUrl) {
+                        avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username.toLowerCase())}&backgroundColor=6366f1`;
+                        db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, user.id]);
+                    }
+                    
+                    // Update last seen
+                    db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
+                    
+                    // Store user info for this socket
+                    connectedUsers.set(socket.id, {
+                        username: user.username,
+                        userId: user.id,
+                        roomId: 1
+                    });
+                    
+                    // Initialize user rooms
+                    if (!userRooms.has(user.id)) {
+                        userRooms.set(user.id, new Set([1]));
+                    }
+                    
+                    // Join user to general room
+                    socket.join('room_1');
+                    
+                    // Send success response
+                    socket.emit('login_success', {
+                        success: true,
+                        user: {
+                            id: user.id,
+                            username: user.username,
+                            avatar_url: avatarUrl,
+                            email: user.email,
+                            email_verified: user.email_verified
+                        }
+                    });
+                    
+                    // Add user to general chat room
+                    db.run('INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
+                    
+                    // Broadcast online users
+                    broadcastOnlineUsers();
+                    
+                    // Notify others
+                    socket.broadcast.emit('user_joined', {
+                        username: user.username,
+                        message: `${user.username} joined the chat`
+                    });
+                    
+                    console.log(`User logged in: ${user.username} (ID: ${user.id})`);
+                });
+            }
+        );
+    });
         
         db.run(
             "INSERT OR IGNORE INTO users (username, password_hash, avatar_url) VALUES (?, ?, ?)",

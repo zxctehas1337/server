@@ -5,8 +5,17 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    password_hash VARCHAR(255), -- Made optional for OAuth users
+    email VARCHAR(255) UNIQUE, -- Add email field for OAuth
+    github_id VARCHAR(255) UNIQUE, -- GitHub OAuth ID
+    avatar_url VARCHAR(500), -- Avatar URL from OAuth or generated
+    email_verified BOOLEAN DEFAULT FALSE, -- Email verification status
+    verification_code VARCHAR(6), -- Email verification code
+    verification_code_expires TIMESTAMP WITH TIME ZONE, -- Code expiration time
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_seen TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_oauth_user BOOLEAN DEFAULT FALSE -- Flag to distinguish OAuth users
 );
 
 -- Messages table: stores chat messages
@@ -21,6 +30,8 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_github_id ON users(github_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Optional: Add some constraints (only if they don't already exist)
 DO $$ 

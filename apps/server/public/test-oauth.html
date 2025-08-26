@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kracken - Тест OAuth и Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #6366f1;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #4f46e5;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .result {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            border-left: 4px solid #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест OAuth и Email - Kracken</h1>
+        
+        <div class="section">
+            <h2>🔧 Проверка конфигурации OAuth</h2>
+            <button onclick="testOAuthConfig()">Проверить OAuth конфигурацию</button>
+            <div id="oauthResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>📧 Тест отправки Email</h2>
+            <input type="email" id="emailTo" placeholder="Email получателя" value="test@example.com">
+            <select id="emailTemplate">
+                <option value="welcome">Приветственное письмо</option>
+                <option value="passwordReset">Сброс пароля</option>
+                <option value="notification">Уведомление</option>
+            </select>
+            <input type="text" id="emailUsername" placeholder="Имя пользователя" value="TestUser">
+            <textarea id="emailMessage" placeholder="Сообщение (для notification)" rows="3">Это тестовое уведомление от Kracken!</textarea>
+            <button onclick="testEmail()">Отправить тестовый email</button>
+            <div id="emailResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>👤 Тест OAuth регистрации</h2>
+            <input type="text" id="githubId" placeholder="GitHub ID" value="123456">
+            <input type="text" id="username" placeholder="Username" value="testuser">
+            <input type="email" id="userEmail" placeholder="Email" value="test@example.com">
+            <input type="url" id="avatarUrl" placeholder="Avatar URL" value="https://api.dicebear.com/7.x/avataaars/svg?seed=testuser">
+            <button onclick="testOAuthRegister()">Тест OAuth регистрации</button>
+            <div id="registerResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Статус сервера</h2>
+            <button onclick="checkServerStatus()">Проверить статус</button>
+            <div id="statusResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const SERVER_URL = 'https://beckend-yaj1.onrender.com';
+
+        function showResult(elementId, data, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `result ${type}`;
+            element.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function testOAuthConfig() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/test/github-oauth`);
+                const data = await response.json();
+                showResult('oauthResult', data, data.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('oauthResult', { error: error.message }, 'error');
+            }
+        }
+
+        async function testEmail() {
+            try {
+                const to = document.getElementById('emailTo').value;
+                const template = document.getElementById('emailTemplate').value;
+                const username = document.getElementById('emailUsername').value;
+                const message = document.getElementById('emailMessage').value;
+
+                const data = { username };
+                if (template === 'notification') {
+                    data.message = message;
+                } else if (template === 'passwordReset') {
+                    data.resetLink = `${SERVER_URL}/reset?token=test123`;
+                }
+
+                const response = await fetch(`${SERVER_URL}/api/test/email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to, template, data })
+                });
+                
+                const result = await response.json();
+                showResult('emailResult', result, result.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('emailResult', { error: error.message }, 'error');
+            }
+        }
+
+        async function testOAuthRegister() {
+            try {
+                const githubId = document.getElementById('githubId').value;
+                const username = document.getElementById('username').value;
+                const email = document.getElementById('userEmail').value;
+                const avatarUrl = document.getElementById('avatarUrl').value;
+
+                const response = await fetch(`${SERVER_URL}/api/test/oauth-register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ githubId, username, email, avatarUrl })
+                });
+                
+                const result = await response.json();
+                showResult('registerResult', result, result.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('registerResult', { error: error.message }, 'error');
+            }
+        }
+
+        async function checkServerStatus() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/health`);
+                const data = await response.json();
+                showResult('statusResult', data, data.ok ? 'success' : 'error');
+            } catch (error) {
+                showResult('statusResult', { error: error.message }, 'error');
+            }
+        }
+
+        // Автоматически проверить статус при загрузке
+        window.onload = function() {
+            checkServerStatus();
+        };
+    </script>
+</body>
+</html>

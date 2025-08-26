@@ -13,9 +13,34 @@ const socket = io({
 const loginContainer = document.getElementById('loginContainer');
 const chatContainer = document.getElementById('chatContainer');
 const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const emailVerificationForm = document.getElementById('emailVerificationForm');
 const messageForm = document.getElementById('messageForm');
+
+// Login form elements
 const usernameInput = document.getElementById('username');
 const passwordInput = document.getElementById('password');
+
+// Register form elements
+const regUsernameInput = document.getElementById('regUsername');
+const regEmailInput = document.getElementById('regEmail');
+const regPasswordInput = document.getElementById('regPassword');
+const regPasswordConfirmInput = document.getElementById('regPasswordConfirm');
+
+// Verification form elements
+const verificationEmailSpan = document.getElementById('verificationEmail');
+const verificationCodeInput = document.getElementById('verificationCode');
+
+// Navigation buttons
+const showRegisterBtn = document.getElementById('showRegisterBtn');
+const showLoginBtn = document.getElementById('showLoginBtn');
+const backToRegisterBtn = document.getElementById('backToRegisterBtn');
+
+// OAuth buttons
+const githubLoginBtn = document.getElementById('githubLoginBtn');
+const githubLoginFromRegisterBtn = document.getElementById('githubLoginFromRegisterBtn');
+
+// Other elements
 const messageInput = document.getElementById('messageInput');
 const messagesDiv = document.getElementById('messages');
 const userInfoDiv = document.getElementById('userInfo');
@@ -144,6 +169,22 @@ function resetToLogin() {
   usernameInput.focus();
   
   showStatus('Connection lost. Please login again.', 'error');
+
+  // Clear any invitation UI/state so it won't cover the login screen
+  try {
+    if (typeof hideInvitationModal === 'function') hideInvitationModal();
+    if (typeof hideInvitationNotification === 'function') hideInvitationNotification();
+  } catch (e) {}
+  try {
+    if (typeof pendingInvitations !== 'undefined' && pendingInvitations && pendingInvitations.clear) {
+      pendingInvitations.clear();
+    }
+  } catch (e) {}
+  try {
+    if (typeof currentInvite !== 'undefined') {
+      currentInvite = null;
+    }
+  } catch (e) {}
 }
 
 // Utility Functions
@@ -342,7 +383,7 @@ socket.on('disconnect', (reason) => {
   }
 });
 
-socket.on('username_set', (data) => {
+socket.on('login_success', (data) => {
   if (data.success) {
     currentUser = data.user;
     currentUser.avatar_url = data.user.avatar_url || generateAvatar(data.user.username);
@@ -354,16 +395,45 @@ socket.on('username_set', (data) => {
     const avatar = createAvatarElement(currentUser.username, 24);
     userInfoDiv.innerHTML = `
       ${avatar.outerHTML}
-      <span>Logged in as: ${currentUser.username}</span>
+      <span>Вход выполнен: ${currentUser.username}</span>
     `;
     
-    showStatus(`Welcome, ${currentUser.username}!`, 'success');
+    showStatus(`Добро пожаловать, ${currentUser.username}!`, 'success');
     messageInput.focus();
     
     // Join default room
     socket.emit('join_room', { roomId: 1, roomType: 'general' });
   } else {
-    showStatus(data.error || 'Failed to set username', 'error');
+    showStatus(data.error || 'Ошибка входа', 'error');
+  }
+});
+
+socket.on('login_error', (data) => {
+  showStatus(data.error || 'Неверное имя пользователя или пароль', 'error');
+});
+
+socket.on('token_auth_success', (data) => {
+  if (data.success) {
+    currentUser = data.user;
+    currentUser.avatar_url = data.user.avatar_url || generateAvatar(data.user.username);
+    
+    loginContainer.style.display = 'none';
+    chatContainer.style.display = 'flex';
+    
+    // Update user info with avatar
+    const avatar = createAvatarElement(currentUser.username, 24);
+    userInfoDiv.innerHTML = `
+      ${avatar.outerHTML}
+      <span>Вход выполнен: ${currentUser.username}</span>
+    `;
+    
+    showStatus(`Добро пожаловать, ${currentUser.username}!`, 'success');
+    messageInput.focus();
+    
+    // Join default room
+    socket.emit('join_room', { roomId: 1, roomType: 'general' });
+  } else {
+    showStatus(data.error || 'Ошибка аутентификации', 'error');
   }
 });
 
@@ -437,33 +507,184 @@ loginForm.addEventListener('submit', (e) => {
   const password = passwordInput.value.trim();
   
   if (!username || !password) {
-    showStatus('Please enter both username and password', 'error');
+    showStatus('Пожалуйста, введите имя пользователя и пароль', 'error');
     return;
   }
   
   if (username.length < 3) {
-    showStatus('Username must be at least 3 characters', 'error');
+    showStatus('Имя пользователя должно содержать минимум 3 символа', 'error');
     return;
   }
   
   if (password.length < 4) {
-    showStatus('Password must be at least 4 characters', 'error');
+    showStatus('Пароль должен содержать минимум 4 символа', 'error');
     return;
   }
   
   // Disable form while processing
   const submitButton = loginForm.querySelector('button');
   const originalText = submitButton.textContent;
-  submitButton.textContent = 'Joining...';
+  submitButton.textContent = 'Вход...';
   submitButton.disabled = true;
   
-  socket.emit('set_username', { username, password });
+  socket.emit('login', { username, password });
   
   // Re-enable form after timeout
   setTimeout(() => {
     submitButton.textContent = originalText;
     submitButton.disabled = false;
   }, 5000);
+});
+
+// Register form handler
+registerForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const username = regUsernameInput.value.trim();
+  const email = regEmailInput.value.trim();
+  const password = regPasswordInput.value;
+  const passwordConfirm = regPasswordConfirmInput.value;
+  
+  // Validation
+  if (!username || !email || !password || !passwordConfirm) {
+    showStatus('Пожалуйста, заполните все поля', 'error');
+    return;
+  }
+  
+  if (username.length < 3) {
+    showStatus('Имя пользователя должно содержать минимум 3 символа', 'error');
+    return;
+  }
+  
+  if (password.length < 6) {
+    showStatus('Пароль должен содержать минимум 6 символов', 'error');
+    return;
+  }
+  
+  if (password !== passwordConfirm) {
+    showStatus('Пароли не совпадают', 'error');
+    return;
+  }
+  
+  if (!email.includes('@')) {
+    showStatus('Пожалуйста, введите корректный email', 'error');
+    return;
+  }
+  
+  // Disable form while processing
+  const submitButton = registerForm.querySelector('button');
+  const originalText = submitButton.textContent;
+  submitButton.textContent = 'Регистрация...';
+  submitButton.disabled = true;
+  
+  // Send registration request
+  fetch('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, email, password })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showStatus('Код подтверждения отправлен на ваш email', 'success');
+      showVerificationForm(email);
+    } else {
+      showStatus(data.error || 'Ошибка при регистрации', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Registration error:', error);
+    showStatus('Ошибка при регистрации', 'error');
+  })
+  .finally(() => {
+    submitButton.textContent = originalText;
+    submitButton.disabled = false;
+  });
+});
+
+// Email verification form handler
+emailVerificationForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  
+  const code = verificationCodeInput.value.trim();
+  
+  if (!code || code.length !== 6) {
+    showStatus('Пожалуйста, введите 6-значный код', 'error');
+    return;
+  }
+  
+  // Disable form while processing
+  const submitButton = emailVerificationForm.querySelector('button');
+  const originalText = submitButton.textContent;
+  submitButton.textContent = 'Проверка...';
+  submitButton.disabled = true;
+  
+  // Send verification request
+  fetch('/api/auth/verify-email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ code })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showStatus('Email подтвержден! Теперь вы можете войти', 'success');
+      showLoginForm();
+      // Clear register form
+      registerForm.reset();
+    } else {
+      showStatus(data.error || 'Неверный код подтверждения', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Verification error:', error);
+    showStatus('Ошибка при проверке кода', 'error');
+  })
+  .finally(() => {
+    submitButton.textContent = originalText;
+    submitButton.disabled = false;
+  });
+});
+
+// Resend code button handler
+document.getElementById('resendCodeBtn').addEventListener('click', () => {
+  const email = regEmailInput.value.trim();
+  if (!email) {
+    showStatus('Email не найден', 'error');
+    return;
+  }
+  
+  const button = document.getElementById('resendCodeBtn');
+  button.disabled = true;
+  button.textContent = 'Отправка...';
+  
+  fetch('/api/auth/resend-code', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      showStatus('Код подтверждения отправлен повторно', 'success');
+    } else {
+      showStatus(data.error || 'Ошибка при отправке кода', 'error');
+    }
+  })
+  .catch(error => {
+    console.error('Resend error:', error);
+    showStatus('Ошибка при отправке кода', 'error');
+  })
+  .finally(() => {
+    button.disabled = false;
+    button.textContent = 'Отправить снова';
+  });
 });
 
 messageForm.addEventListener('submit', (e) => {
@@ -559,9 +780,73 @@ messageInput.addEventListener('keydown', (e) => {
   }
 });
 
+// Form switching functions
+function showLoginForm() {
+  loginForm.style.display = 'block';
+  registerForm.style.display = 'none';
+  emailVerificationForm.style.display = 'none';
+  usernameInput.focus();
+}
+
+function showRegisterForm() {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'block';
+  emailVerificationForm.style.display = 'none';
+  regUsernameInput.focus();
+}
+
+function showVerificationForm(email) {
+  loginForm.style.display = 'none';
+  registerForm.style.display = 'none';
+  emailVerificationForm.style.display = 'block';
+  verificationEmailSpan.textContent = email;
+  verificationCodeInput.focus();
+}
+
+// Form navigation event listeners
+showRegisterBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  showRegisterForm();
+});
+
+showLoginBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  showLoginForm();
+});
+
+backToRegisterBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  showRegisterForm();
+});
+
+// GitHub OAuth handlers
+githubLoginBtn.addEventListener('click', () => {
+  window.location.href = '/api/auth/github';
+});
+
+githubLoginFromRegisterBtn.addEventListener('click', () => {
+  window.location.href = '/api/auth/github';
+});
+
 // Auto-focus on username input when page loads
 document.addEventListener('DOMContentLoaded', () => {
   usernameInput.focus();
+  
+  // Handle token returned via query param after OAuth callback
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('accessToken', token);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('token');
+      window.history.replaceState({}, '', url.toString());
+      showStatus('Успешный вход через GitHub', 'success');
+      
+      // Auto-login with token
+      socket.emit('authenticate_with_token', { token });
+    }
+  } catch (_) {}
 });
 
 // Handle connection errors
@@ -748,6 +1033,8 @@ function hideInvitationNotification() {
 
 // Handle invitation response
 function respondToInvite(accepted) {
+  // If not logged in, do nothing
+  if (!currentUser) return;
   if (!currentInvite) return;
   
   const invite = currentInvite;
@@ -807,6 +1094,11 @@ invitationModal.addEventListener('click', (e) => {
 socket.on('private_invitation', (invite) => {
   console.log('Received private chat invitation:', invite);
   
+  // Ignore invitations before successful login
+  if (!currentUser) {
+    return;
+  }
+
   if (!invite || !invite.inviteId || !invite.fromUser) {
     console.error('Invalid invitation data:', invite);
     return;
@@ -815,16 +1107,22 @@ socket.on('private_invitation', (invite) => {
   // Store invitation
   pendingInvitations.set(invite.inviteId, invite);
   
-  // Show notification toast
-  showInvitationNotification(invite);
+  // Check if device is mobile - don't show notification on mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
   
-  // Play a subtle notification sound (if browser supports it)
-  try {
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dtyl4gBDWIzfPbfTEGHHnJ8OGVRAoRVK3n77BdGAg+ltryxnkpBSl+zPLaizsIGGS57+OZVA0NTaXh8bllHgg2jdXzzn0vBSF6yu/ejj0JE1Ko4/C2ZRwHN5DY88p9LgUme8rx3Y4+CRNSqOPwtmUcBzdOfz8B');
-    audio.volume = 0.1;
-    audio.play().catch(() => {});
-  } catch (e) {
-    // Ignore audio errors
+  // Only show notification toast on desktop devices
+  if (!isMobile) {
+    showInvitationNotification(invite);
+    
+    // Play a subtle notification sound (if browser supports it)
+    try {
+      const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dtyl4gBDWIzfPbfTEGHHnJ8OGVRAoRVK3n77BdGAg+ltryxnkpBSl+zPLaizsIGGS57+OZVA0NTaXh8bllHgg2jdXzzn0vBSF6yu/ejj0JE1Ko4/C2ZRwHN5DY88p9LgUme8rx3Y4+CRNSqOPwtmUcBzdOfz8B');
+      audio.volume = 0.1;
+      audio.play().catch(() => {});
+    } catch (e) {
+      // Ignore audio errors
+    }
   }
 });
 
@@ -857,7 +1155,17 @@ function testInvitation() {
   };
   
   console.log('Testing invitation modal with mock data:', mockInvitation);
-  showInvitationNotification(mockInvitation);
+  
+  // Check if device is mobile - don't show notification on mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+  
+  // Only show notification toast on desktop devices
+  if (!isMobile) {
+    showInvitationNotification(mockInvitation);
+  } else {
+    console.log('Skipping invitation notification on mobile device');
+  }
 }
 
 // Make test function globally available for console testing
