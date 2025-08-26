@@ -11,7 +11,34 @@ const { Server } = require('socket.io');
 const { Pool } = require('pg');
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config();
+// Load environment variables from .env (try multiple locations)
+(() => {
+	try {
+		const dotenv = require('dotenv');
+		let loaded = false;
+		// 1) Try CWD/.env (Render often runs from repo root)
+		const cwdEnv = path.resolve(process.cwd(), '.env');
+		if (fs.existsSync(cwdEnv)) {
+			dotenv.config({ path: cwdEnv });
+			logger.info({ envPath: cwdEnv }, 'Loaded .env from CWD');
+			loaded = true;
+		}
+		// 2) Try apps/server/.env (when running server from monorepo root)
+		const serverEnv = path.resolve(process.cwd(), 'apps/server/.env');
+		if (!loaded && fs.existsSync(serverEnv)) {
+			dotenv.config({ path: serverEnv });
+			logger.info({ envPath: serverEnv }, 'Loaded .env from apps/server');
+			loaded = true;
+		}
+		// 3) Fallback to default (dotenv will search up the tree)
+		if (!loaded) {
+			dotenv.config();
+			logger.warn('No explicit .env found; using default dotenv config');
+		}
+	} catch (e) {
+		console.error('dotenv load error:', e);
+	}
+})();
 
 const app = express();
 const server = createServer(app);
