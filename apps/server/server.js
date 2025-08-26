@@ -249,6 +249,137 @@ app.post('/logout', (req, res) => {
     res.json({ success: true, message: 'Logged out (stateless stub)' });
 });
 
+// Test GitHub OAuth endpoint (for production testing)
+app.get('/api/test/github-oauth', (req, res) => {
+    res.json({
+        success: true,
+        message: 'GitHub OAuth endpoint ready for testing',
+        endpoints: {
+            auth: 'https://beckend-yaj1.onrender.com/api/auth/github',
+            callback: 'https://beckend-yaj1.onrender.com/api/auth/github/callback'
+        },
+        config: {
+            clientId: process.env.GITHUB_CLIENT_ID ? 'Configured' : 'Not configured',
+            callbackUrl: process.env.GITHUB_CALLBACK_URL || 'https://beckend-yaj1.onrender.com/api/auth/github/callback'
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Test email endpoint (for production testing)
+app.post('/api/test/email', async (req, res) => {
+    try {
+        const { to, template, data } = req.body;
+        
+        if (!to || !template) {
+            return res.status(400).json({
+                success: false,
+                error: 'Email and template are required'
+            });
+        }
+
+        // Simple email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(to)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid email format'
+            });
+        }
+
+        // Mock email sending (for testing)
+        const emailResult = {
+            success: true,
+            message: 'Email would be sent in production',
+            details: {
+                to: to,
+                template: template,
+                data: data,
+                smtpConfigured: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
+                timestamp: new Date().toISOString()
+            }
+        };
+
+        // Log to database if email_logs table exists
+        try {
+            await pool.query(
+                'INSERT INTO email_logs (recipient, template, status, message_id) VALUES ($1, $2, $3, $4)',
+                [to, template, 'test_sent', `test_${Date.now()}`]
+            );
+        } catch (dbError) {
+            console.log('Email logs table not available:', dbError.message);
+        }
+
+        res.json(emailResult);
+        
+    } catch (error) {
+        logger.error({ err: error }, 'Test email endpoint error');
+        res.status(500).json({
+            success: false,
+            error: 'Test email endpoint error',
+            details: error.message
+        });
+    }
+});
+
+// Test OAuth registration endpoint
+app.post('/api/test/oauth-register', async (req, res) => {
+    try {
+        const { githubId, username, email, avatarUrl } = req.body;
+        
+        if (!githubId || !username) {
+            return res.status(400).json({
+                success: false,
+                error: 'GitHub ID and username are required'
+            });
+        }
+
+        // Check if user already exists
+        const existingUser = await pool.query(
+            'SELECT id, username FROM users WHERE github_id = $1 OR username = $2',
+            [githubId, username]
+        );
+
+        if (existingUser.rows.length > 0) {
+            return res.json({
+                success: true,
+                message: 'User already exists',
+                user: existingUser.rows[0],
+                action: 'login'
+            });
+        }
+
+        // Create new OAuth user
+        const newUser = await pool.query(
+            `INSERT INTO users (username, email, github_id, avatar_url, is_oauth_user) 
+             VALUES ($1, $2, $3, $4, true) 
+             RETURNING id, username, email, avatar_url, created_at`,
+            [username, email, githubId, avatarUrl]
+        );
+
+        // Add user to general chat room
+        await pool.query(
+            'INSERT INTO chat_room_participants (room_id, user_id) VALUES ($1, $2) ON CONFLICT (room_id, user_id) DO NOTHING',
+            [1, newUser.rows[0].id]
+        );
+
+        res.json({
+            success: true,
+            message: 'OAuth user created successfully',
+            user: newUser.rows[0],
+            action: 'register'
+        });
+
+    } catch (error) {
+        logger.error({ err: error }, 'OAuth registration error');
+        res.status(500).json({
+            success: false,
+            error: 'OAuth registration failed',
+            details: error.message
+        });
+    }
+});
+
 // Server/node status endpoint
 app.get('/status', async (req, res) => {
     try {
