@@ -2,6 +2,7 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github2').Strategy;
 const { query } = require('../../utils/db');
 const { success, badRequest, serverError } = require('../../utils/response');
+const axios = require('axios');
 
 // GitHub OAuth configuration
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
@@ -37,8 +38,8 @@ passport.use(new GitHubStrategy({
         const avatarUrl = profile.photos && profile.photos[0] ? profile.photos[0].value : null;
 
         const newUser = await query(
-            `INSERT INTO users (username, email, github_id, avatar_url, is_oauth_user) 
-             VALUES ($1, $2, $3, $4, true) 
+            `INSERT INTO users (username, email, github_id, avatar_url, is_oauth_user, email_verified) 
+             VALUES ($1, $2, $3, $4, true, true) 
              RETURNING *`,
             [username, email, profile.id, avatarUrl]
         );
@@ -101,4 +102,57 @@ export function callbackHandler(req, res) {
         // Redirect to frontend with token
         res.redirect(`/?token=${token}`);
     })(req, res);
+}
+
+// Manual GitHub OAuth flow (for server.js compatibility)
+export async function handleGitHubCallback(code) {
+    try {
+        // Exchange code for access token
+        const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
+            client_id: GITHUB_CLIENT_ID,
+            client_secret: GITHUB_CLIENT_SECRET,
+            code: code
+        }, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        if (!access_token) {
+            throw new Error('Failed to get access token');
+        }
+
+        // Get user data from GitHub
+        const userResponse = await axios.get('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${access_token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        // Get user emails
+        const emailsResponse = await axios.get('https://api.github.com/user/emails', {
+            headers: {
+                'Authorization': `token ${access_token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        const userData = userResponse.data;
+        const emails = emailsResponse.data;
+        const primaryEmail = emails.find(email => email.primary)?.email || emails[0]?.email;
+
+        return {
+            id: userData.id,
+            username: userData.login,
+            email: primaryEmail,
+            avatar_url: userData.avatar_url,
+            name: userData.name
+        };
+    } catch (error) {
+        console.error('GitHub OAuth error:', error);
+        throw error;
+    }
 }

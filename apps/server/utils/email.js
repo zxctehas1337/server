@@ -15,6 +15,72 @@ const emailConfig = {
 const transporter = nodemailer.createTransporter(emailConfig);
 
 /**
+ * Verify email configuration
+ */
+export async function verifyEmailConfig() {
+  try {
+    await transporter.verify();
+    return { success: true, message: 'Email configuration is valid' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send welcome email
+ * @param {string} email - User's email address
+ * @param {string} username - User's username
+ */
+export async function sendWelcomeEmail(email, username) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM || `"Kracken Messenger" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Добро пожаловать в Kracken Messenger! 🚀',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #6366f1; margin: 0;">⚡ Kracken Messenger</h1>
+          <p style="color: #666; margin: 10px 0;">Быстрый и безопасный мессенджер</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Добро пожаловать, ${username}! 🎉</h2>
+          <p style="color: #555; line-height: 1.6;">
+            Мы рады приветствовать вас в Kracken Messenger! Ваш аккаунт успешно создан и готов к использованию.
+          </p>
+          
+          <div style="background: #6366f1; color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
+            <h3 style="margin: 0 0 10px 0; font-size: 18px;">🚀 Начните общение прямо сейчас!</h3>
+            <p style="margin: 0; font-size: 16px;">Присоединяйтесь к общим чатам и найдите новых друзей</p>
+          </div>
+          
+          <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="margin: 0 0 10px 0; color: #2d5a2d;">✅ Ваш аккаунт подтвержден</h4>
+            <p style="margin: 0; color: #555; font-size: 14px;">
+              Email адрес подтвержден автоматически через GitHub OAuth
+            </p>
+          </div>
+        </div>
+        
+        <div style="text-align: center; color: #999; font-size: 12px;">
+          <p>Если у вас есть вопросы, не стесняйтесь обращаться в поддержку.</p>
+          <p>© 2024 Kracken Messenger. Все права защищены.</p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`Welcome email sent to ${email}`);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Send verification email with code
  * @param {string} email - User's email address
  * @param {string} username - User's username
@@ -22,7 +88,7 @@ const transporter = nodemailer.createTransporter(emailConfig);
  */
 export async function sendVerificationEmail(email, username, code) {
   const mailOptions = {
-    from: `"Kracken Messenger" <${process.env.SMTP_USER}>`,
+    from: process.env.SMTP_FROM || `"Kracken Messenger" <${process.env.SMTP_USER}>`,
     to: email,
     subject: 'Подтверждение email - Kracken Messenger',
     html: `
@@ -60,11 +126,12 @@ export async function sendVerificationEmail(email, username, code) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const result = await transporter.sendMail(mailOptions);
     console.log(`Verification email sent to ${email}`);
+    return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Email sending error:', error);
-    throw new Error('Failed to send verification email');
+    return { success: false, error: error.message };
   }
 }
 
@@ -78,7 +145,7 @@ export async function sendPasswordResetEmail(email, username, resetToken) {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
   
   const mailOptions = {
-    from: `"Kracken Messenger" <${process.env.SMTP_USER}>`,
+    from: process.env.SMTP_FROM || `"Kracken Messenger" <${process.env.SMTP_USER}>`,
     to: email,
     subject: 'Сброс пароля - Kracken Messenger',
     html: `
@@ -115,10 +182,76 @@ export async function sendPasswordResetEmail(email, username, resetToken) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const result = await transporter.sendMail(mailOptions);
     console.log(`Password reset email sent to ${email}`);
+    return { success: true, messageId: result.messageId };
   } catch (error) {
     console.error('Email sending error:', error);
-    throw new Error('Failed to send password reset email');
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send notification email
+ * @param {string} email - User's email address
+ * @param {string} username - User's username
+ * @param {string} message - Notification message
+ */
+export async function sendNotificationEmail(email, username, message) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM || `"Kracken Messenger" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: 'Уведомление - Kracken Messenger',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #6366f1; margin: 0;">⚡ Kracken Messenger</h1>
+          <p style="color: #666; margin: 10px 0;">Быстрый и безопасный мессенджер</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Привет, ${username}!</h2>
+          <p style="color: #555; line-height: 1.6;">
+            ${message}
+          </p>
+        </div>
+        
+        <div style="text-align: center; color: #999; font-size: 12px;">
+          <p>© 2024 Kracken Messenger. Все права защищены.</p>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`Notification email sent to ${email}`);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Generic email sending function
+ * @param {Object} options - Email options
+ */
+export async function sendEmail(options) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM || `"Kracken Messenger" <${process.env.SMTP_USER}>`,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+    text: options.text
+  };
+
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${options.to}`);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('Email sending error:', error);
+    return { success: false, error: error.message };
   }
 }

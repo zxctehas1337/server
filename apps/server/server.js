@@ -103,42 +103,136 @@ app.get('/api/auth/github', (req, res) => {
     res.redirect(githubAuthUrl);
 });
 
-app.get('/api/auth/github/callback', (req, res) => {
+app.get('/api/auth/github/callback', async (req, res) => {
     const { code } = req.query;
     
     if (!code) {
         return res.redirect('/?error=github_auth_failed');
     }
     
-    // In a real implementation, you would exchange the code for an access token
-    // and fetch user data from GitHub API
-    // For now, we'll simulate a successful login
-    
-    const mockUser = {
-        id: Date.now(),
-        username: `github_user_${Date.now()}`,
-        email: `github_${Date.now()}@example.com`,
-        avatar_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}&backgroundColor=6366f1`
-    };
-    
-    // Store user in database
-    db.run(
-        `INSERT OR REPLACE INTO users (username, email, github_id, avatar_url, email_verified, is_oauth_user) 
-         VALUES (?, ?, ?, ?, 1, 1)`,
-        [mockUser.username, mockUser.email, mockUser.id.toString(), mockUser.avatar_url],
-        function(err) {
-            if (err) {
-                console.error('Error saving GitHub user:', err);
-                return res.redirect('/?error=github_auth_failed');
+    try {
+        // Exchange code for access token
+        const axios = require('axios');
+        const tokenResponse = await axios.post('https://github.com/login/oauth/access_token', {
+            client_id: process.env.GITHUB_CLIENT_ID,
+            client_secret: process.env.GITHUB_CLIENT_SECRET,
+            code: code
+        }, {
+            headers: {
+                'Accept': 'application/json'
             }
-            
-            // Generate a simple token (in production, use JWT)
-            const token = Buffer.from(JSON.stringify(mockUser)).toString('base64');
-            
-            // Redirect back to the app with token
-            res.redirect(`/?token=${token}`);
+        });
+
+        const { access_token } = tokenResponse.data;
+
+        if (!access_token) {
+            console.error('Failed to get access token:', tokenResponse.data);
+            return res.redirect('/?error=github_auth_failed');
         }
-    );
+
+        // Get user data from GitHub
+        const userResponse = await axios.get('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${access_token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        // Get user emails
+        const emailsResponse = await axios.get('https://api.github.com/user/emails', {
+            headers: {
+                'Authorization': `token ${access_token}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        });
+
+        const userData = userResponse.data;
+        const emails = emailsResponse.data;
+        const primaryEmail = emails.find(email => email.primary)?.email || emails[0]?.email;
+
+        // Check if user already exists
+        db.get(
+            'SELECT * FROM users WHERE github_id = ?',
+            [userData.id.toString()],
+            async (err, existingUser) => {
+                if (err) {
+                    console.error('Error checking existing user:', err);
+                    return res.redirect('/?error=github_auth_failed');
+                }
+
+                if (existingUser) {
+                    // User exists, update last seen
+                    db.run(
+                        'UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?',
+                        [existingUser.id],
+                        (updateErr) => {
+                            if (updateErr) {
+                                console.error('Error updating user:', updateErr);
+                            }
+                            
+                            // Generate JWT token
+                            const jwt = require('jsonwebtoken');
+                            const token = jwt.sign(
+                                { userId: existingUser.id, username: existingUser.username },
+                                process.env.JWT_SECRET || 'your-secret-key',
+                                { expiresIn: '7d' }
+                            );
+                            
+                            res.redirect(`/?token=${token}`);
+                        }
+                    );
+                } else {
+                    // Create new user
+                    const username = userData.login || `github_${userData.id}`;
+                    const avatarUrl = userData.avatar_url;
+                    
+                    db.run(
+                        `INSERT INTO users (username, email, github_id, avatar_url, email_verified, is_oauth_user) 
+                         VALUES (?, ?, ?, ?, 1, 1)`,
+                        [username, primaryEmail, userData.id.toString(), avatarUrl],
+                        function(insertErr) {
+                            if (insertErr) {
+                                console.error('Error creating GitHub user:', insertErr);
+                                return res.redirect('/?error=github_auth_failed');
+                            }
+                            
+                            // Add user to general chat room
+                            db.run(
+                                'INSERT INTO chat_room_participants (room_id, user_id) VALUES (?, ?)',
+                                [1, this.lastID],
+                                (participantErr) => {
+                                    if (participantErr) {
+                                        console.error('Error adding user to chat room:', participantErr);
+                                    }
+                                    
+                                    // Send welcome email
+                                    const { sendWelcomeEmail } = require('./utils/email');
+                                    if (primaryEmail) {
+                                        sendWelcomeEmail(primaryEmail, username).catch(emailErr => {
+                                            console.error('Error sending welcome email:', emailErr);
+                                        });
+                                    }
+                                    
+                                    // Generate JWT token
+                                    const jwt = require('jsonwebtoken');
+                                    const token = jwt.sign(
+                                        { userId: this.lastID, username: username },
+                                        process.env.JWT_SECRET || 'your-secret-key',
+                                        { expiresIn: '7d' }
+                                    );
+                                    
+                                    res.redirect(`/?token=${token}`);
+                                }
+                            );
+                        }
+                    );
+                }
+            }
+        );
+    } catch (error) {
+        console.error('GitHub OAuth error:', error);
+        res.redirect('/?error=github_auth_failed');
+    }
 });
 
 // API endpoints for authentication
