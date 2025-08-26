@@ -125,6 +125,125 @@ app.get('/api', (req, res) => {
     });
 });
 
+// Basic healthcheck endpoint
+app.get('/api/health', async (req, res) => {
+    const start = Date.now();
+    let dbOk = false;
+    try {
+        const result = await pool.query('SELECT 1 as ok');
+        dbOk = result.rows[0]?.ok === 1;
+    } catch (e) {
+        logger.error({ err: e }, 'Healthcheck DB query failed');
+    }
+    res.json({
+        ok: true,
+        uptimeSec: Math.round(process.uptime()),
+        db: dbOk ? 'ok' : 'error',
+        latencyMs: Date.now() - start,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Simple ping endpoint
+app.get('/api/ping', (req, res) => {
+    res.json({ pong: true, timestamp: new Date().toISOString() });
+});
+
+// Server time endpoint
+app.get('/api/time', (req, res) => {
+    const now = new Date();
+    res.json({
+        iso: now.toISOString(),
+        epochMs: now.getTime(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+    });
+});
+
+// Echo endpoint (for testing any HTTP method)
+app.all('/api/echo', (req, res) => {
+    res.json({
+        method: req.method,
+        path: req.path,
+        query: req.query,
+        body: req.body,
+        headers: {
+            'user-agent': req.get('user-agent'),
+            'content-type': req.get('content-type'),
+            'accept': req.get('accept')
+        },
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Demo login endpoint (username/password)
+app.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body || {};
+        if (!username || !password) {
+            return res.status(400).json({ success: false, error: 'username and password are required' });
+        }
+
+        const userResult = await pool.query(
+            `SELECT id, username, password_hash, COALESCE(avatar_url, '') as avatar_url FROM users WHERE username = $1`,
+            [username]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        const bcrypt = require('bcrypt');
+        const valid = await bcrypt.compare(password, userResult.rows[0].password_hash);
+        if (!valid) {
+            return res.status(401).json({ success: false, error: 'Invalid credentials' });
+        }
+
+        // For test purposes, we do not issue JWT here. Return user info only.
+        const user = {
+            id: userResult.rows[0].id,
+            username: userResult.rows[0].username,
+            avatar_url: userResult.rows[0].avatar_url
+        };
+        return res.json({ success: true, user });
+    } catch (err) {
+        logger.error({ err }, 'Login error');
+        return res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
+
+// Demo logout endpoint (stateless stub)
+app.post('/logout', (req, res) => {
+    res.json({ success: true, message: 'Logged out (stateless stub)' });
+});
+
+// Server/node status endpoint
+app.get('/status', async (req, res) => {
+    try {
+        const memory = process.memoryUsage();
+        const sockets = io.of('/').sockets.size;
+        const onlineUsers = Array.from(connectedUsers.values());
+        res.json({
+            status: 'ok',
+            version: '2.0.0',
+            uptimeSec: Math.round(process.uptime()),
+            socketsConnected: sockets,
+            onlineUsersCount: onlineUsers.length,
+            onlineUsers: onlineUsers.map(u => ({ id: u.userId, username: u.username })),
+            roomsTracked: userRooms.size,
+            memory: {
+                rss: memory.rss,
+                heapTotal: memory.heapTotal,
+                heapUsed: memory.heapUsed,
+                external: memory.external
+            },
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        logger.error({ err }, 'Status endpoint error');
+        res.status(500).json({ status: 'error' });
+    }
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     // --- Приватные чаты: приглашения и ответы ---
