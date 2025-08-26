@@ -22,6 +22,39 @@ const pool = new Pool({
     connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'browser_messenger'}`
 });
 
+// In-memory recent logs buffer for admin viewing
+const recentLogs = [];
+const maxRecentLogs = parseInt(process.env.ADMIN_LOG_BUFFER || '1000', 10);
+function pushRecentLog(level, obj, msg) {
+    try {
+        recentLogs.push({
+            ts: new Date().toISOString(),
+            level,
+            msg: typeof msg === 'string' ? msg : '',
+            data: obj && typeof obj === 'object' ? obj : undefined
+        });
+        if (recentLogs.length > maxRecentLogs) {
+            recentLogs.splice(0, recentLogs.length - maxRecentLogs);
+        }
+    } catch (_) {
+        // noop – avoid breaking logging on buffer errors
+    }
+}
+
+// Monkey-patch logger methods to also store in-memory logs
+['debug','info','warn','error'].forEach((lvl) => {
+    const orig = logger[lvl] && logger[lvl].bind(logger);
+    if (!orig) return;
+    logger[lvl] = function(arg1, arg2) {
+        if (typeof arg1 === 'string') {
+            pushRecentLog(lvl, undefined, arg1);
+        } else {
+            pushRecentLog(lvl, arg1, arg2);
+        }
+        return orig.apply(logger, arguments);
+    };
+});
+
 // Test database connection
 pool.connect((err, client, release) => {
     if (err) {
@@ -293,6 +326,26 @@ app.post('/api/admin/delete-users', adminGuard, async (req, res) => {
     } finally {
         client.release();
     }
+});
+
+// Get recent server logs (admin)
+app.get('/api/admin/logs', adminGuard, (req, res) => {
+    const limit = Math.max(1, Math.min(2000, parseInt(req.query.limit || '200', 10)));
+    const start = Math.max(0, recentLogs.length - limit);
+    const items = recentLogs.slice(start).map((l, idx) => ({
+        i: start + idx,
+        ts: l.ts,
+        level: l.level,
+        msg: l.msg,
+        data: l.data
+    }));
+    res.json({ success: true, count: items.length, totalBuffered: recentLogs.length, items });
+});
+
+// Clear recent server logs (admin)
+app.post('/api/admin/clear-logs', adminGuard, (req, res) => {
+    recentLogs.length = 0;
+    res.json({ success: true, cleared: true });
 });
 
 // Socket.IO connection handling
