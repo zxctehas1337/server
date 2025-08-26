@@ -46,6 +46,21 @@
                            placeholder="Enter your password">
                 </div>
                 <button type="submit">Join Chat</button>
+                <div class="divider" style="margin: 12px 0; text-align:center; color:#888;">or</div>
+                <button type="button" id="githubLoginBtn" class="oauth-btn" style="background:#24292f; color:#fff; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <span>🐙</span>
+                    <span>Continue with GitHub</span>
+                </button>
+                <button type="button" id="emailCodeBtn" class="oauth-btn" style="margin-top:8px; display:none;">
+                    Get code by email
+                </button>
+                <div id="emailCodeArea" style="display:none; margin-top:8px;">
+                    <input type="email" id="emailForCode" placeholder="Enter your email">
+                    <div style="display:flex; gap:8px; margin-top:6px;">
+                        <input type="text" id="emailCodeInput" placeholder="Code" maxlength="6" style="flex:1;">
+                        <button type="button" id="verifyEmailCodeBtn">Verify</button>
+                    </div>
+                </div>
             </form>
         </div>
 
@@ -157,5 +172,6 @@
     <script src="/socket.io/socket.io.js" defer></script>
     <!-- Main Application Script -->
     <script src="app.js" defer></script>
+    
 </body>
 </html>

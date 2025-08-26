@@ -578,6 +578,25 @@ messageInput.addEventListener('keydown', (e) => {
 // Auto-focus on username input when page loads
 document.addEventListener('DOMContentLoaded', () => {
   usernameInput.focus();
+  // GitHub OAuth button handler
+  const ghBtn = document.getElementById('githubLoginBtn');
+  if (ghBtn) {
+    ghBtn.addEventListener('click', () => {
+      window.location.href = '/api/auth/github';
+    });
+  }
+  // Handle token returned via query param after OAuth callback
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      localStorage.setItem('accessToken', token);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('token');
+      window.history.replaceState({}, '', url.toString());
+      showStatus('Logged in via GitHub', 'success');
+    }
+  } catch (_) {}
 });
 
 // Handle connection errors
