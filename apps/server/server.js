@@ -11,6 +11,9 @@ const { Server } = require('socket.io');
 const { Pool } = require('pg');
 const path = require('path');
 const fs = require('fs');
+const passport = require('passport');
+const GitHubStrategy = require('passport-github2').Strategy;
+const jwt = require('jsonwebtoken');
 // Load environment variables from .env (try multiple locations)
 (() => {
 	try {
@@ -48,6 +51,49 @@ const io = new Server(server);
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'browser_messenger'}`
 });
+
+// Configure Passport GitHub OAuth (stateless)
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+const GITHUB_CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || 'https://beckend-yaj1.onrender.com/api/auth/github/callback';
+if (GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET) {
+    passport.use(new GitHubStrategy({
+        clientID: GITHUB_CLIENT_ID,
+        clientSecret: GITHUB_CLIENT_SECRET,
+        callbackURL: GITHUB_CALLBACK_URL,
+        scope: ['user:email']
+    }, async (accessToken, refreshToken, profile, done) => {
+        try {
+            // Find by github_id
+            const existing = await pool.query('SELECT * FROM users WHERE github_id = $1', [profile.id]);
+            if (existing.rows.length > 0) {
+                // Update last_seen
+                await pool.query('UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = $1', [existing.rows[0].id]);
+                return done(null, existing.rows[0]);
+            }
+            // Prepare fields
+            const email = Array.isArray(profile.emails) && profile.emails[0] ? profile.emails[0].value : null;
+            const username = profile.username || `github_${profile.id}`;
+            const avatarUrl = Array.isArray(profile.photos) && profile.photos[0] ? profile.photos[0].value : null;
+            // Create user
+            const insert = await pool.query(
+                `INSERT INTO users (username, email, github_id, avatar_url, is_oauth_user)
+                 VALUES ($1, $2, $3, $4, true)
+                 RETURNING *`,
+                [username, email, profile.id, avatarUrl]
+            );
+            const user = insert.rows[0];
+            // Ensure general room membership
+            await pool.query(
+                'INSERT INTO chat_room_participants (room_id, user_id) VALUES ($1, $2) ON CONFLICT (room_id, user_id) DO NOTHING',
+                [1, user.id]
+            );
+            return done(null, user);
+        } catch (e) {
+            return done(e);
+        }
+    }));
+}
 
 // In-memory recent logs buffer for admin viewing
 const recentLogs = [];
@@ -146,6 +192,7 @@ app.use(compression());
 app.use(rateLimit({ windowMs: 60 * 1000, max: 120 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(publicPath, { maxAge: '1h', etag: true, lastModified: true }));
+app.use(passport.initialize());
 
 // Store connected users
 const connectedUsers = new Map(); // socketId -> { username, userId, roomId }
@@ -170,6 +217,27 @@ function broadcastOnlineUsers() {
 app.get('/', (req, res) => {
     res.sendFile(indexPath);
 });
+
+// GitHub OAuth routes
+if (GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET) {
+    app.get('/api/auth/github', passport.authenticate('github', { scope: ['user:email'], session: false }));
+    app.get('/api/auth/github/callback', passport.authenticate('github', { session: false, failureRedirect: '/' }), async (req, res) => {
+        try {
+            const user = req.user;
+            const token = jwt.sign(
+                { userId: user.id, username: user.username },
+                process.env.JWT_SECRET || 'dev-secret',
+                { expiresIn: '7d' }
+            );
+            res.redirect(`/?token=${encodeURIComponent(token)}`);
+        } catch (e) {
+            logger.error({ err: e }, 'OAuth callback error');
+            res.redirect('/');
+        }
+    });
+} else {
+    logger.warn('GitHub OAuth not configured; set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET');
+}
 
 // API info endpoint
 app.get('/api', (req, res) => {
