@@ -244,6 +244,57 @@ app.get('/status', async (req, res) => {
     }
 });
 
+// --- Admin utilities ---
+function adminGuard(req, res, next) {
+    const token = req.get('X-Admin-Token') || req.query.adminToken;
+    const expected = process.env.ADMIN_TOKEN || 'dev-admin-token';
+    if (!token || token !== expected) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+    next();
+}
+
+// Delete all messages
+app.post('/api/admin/delete-messages', adminGuard, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const result = await client.query('DELETE FROM messages');
+        await client.query('COMMIT');
+        return res.json({ success: true, deleted: result.rowCount || 0 });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        logger.error({ err }, 'Admin delete messages failed');
+        return res.status(500).json({ success: false, error: 'Failed to delete messages' });
+    } finally {
+        client.release();
+    }
+});
+
+// Delete all users (and related room participants first to avoid FK issues)
+app.post('/api/admin/delete-users', adminGuard, async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        // Remove messages to avoid FK, then participants, then users
+        await client.query('DELETE FROM messages');
+        await client.query('DELETE FROM chat_room_participants');
+        const result = await client.query('DELETE FROM users');
+        await client.query('COMMIT');
+        // Clear runtime state
+        connectedUsers.clear();
+        userRooms.clear();
+        io.emit('online_users', []);
+        return res.json({ success: true, deleted: result.rowCount || 0 });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        logger.error({ err }, 'Admin delete users failed');
+        return res.status(500).json({ success: false, error: 'Failed to delete users' });
+    } finally {
+        client.release();
+    }
+});
+
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     // --- Приватные чаты: приглашения и ответы ---
