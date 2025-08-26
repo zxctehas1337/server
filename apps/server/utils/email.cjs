@@ -1,4 +1,7 @@
-const nodemailer = require('nodemailer');
+let nodemailer;
+(async () => {
+  nodemailer = (await import('nodemailer')).default;
+})();
 
 // Email configuration
 const emailConfig = {
@@ -12,7 +15,7 @@ const emailConfig = {
 };
 
 // Create transporter
-const transporter = nodemailer.createTransport(emailConfig);
+const transporter = nodemailer.createTransporter(emailConfig);
 
 /**
  * Verify email configuration

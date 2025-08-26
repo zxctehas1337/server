@@ -1,8 +1,8 @@
-import { query } from '../../utils/db.js';
-import { comparePassword } from '../../utils/hash.js';
-import { success, badRequest, unauthorized, serverError } from '../../utils/response.js';
+const { query } = require('../../utils/db.js');
+const { comparePassword } = require('../../utils/hash.js');
+const { success, badRequest, unauthorized, serverError } = require('../../utils/response.js');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }

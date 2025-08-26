@@ -13,6 +13,12 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
+// Import API routes
+const registerHandler = require('./api/auth/register.js');
+const verifyEmailHandler = require('./api/auth/verify-email.js');
+const resendCodeHandler = require('./api/auth/resend-code.js');
+const loginHandler = require('./api/auth/login.js');
+
 // Store connected users
 const connectedUsers = new Map();
 const userRooms = new Map();
@@ -112,6 +118,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// API Routes
+app.post('/api/auth/register', registerHandler);
+app.post('/api/auth/verify-email', verifyEmailHandler);
+app.post('/api/auth/resend-code', resendCodeHandler);
+app.post('/api/auth/login', loginHandler);
+
 // GitHub OAuth endpoint
 app.get('/api/auth/github', (req, res) => {
     // Redirect to GitHub OAuth
@@ -119,7 +131,8 @@ app.get('/api/auth/github', (req, res) => {
     if (!clientId) {
         return res.status(500).json({ error: 'GitHub Client ID not configured' });
     }
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+    // Use the configured callback URL from environment
+    const redirectUri = process.env.GITHUB_CALLBACK_URL || `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
     
     res.redirect(githubAuthUrl);
@@ -213,7 +226,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
             );
             
             // Send welcome email
-            const { sendWelcomeEmail } = require('./utils/email');
+            const { sendWelcomeEmail } = require('./utils/email.js');
             if (primaryEmail) {
                 sendWelcomeEmail(primaryEmail, username).catch(emailErr => {
                     console.error('Error sending welcome email:', emailErr);
@@ -272,7 +285,7 @@ app.post('/api/test/email', async (req, res) => {
             return res.status(400).json({ success: false, error: 'Invalid email format' });
         }
 
-        const { sendWelcomeEmail, verifyEmailConfig } = require('./utils/email');
+        const { sendWelcomeEmail, verifyEmailConfig } = require('./utils/email.js');
         let result;
 
         switch (template) {
@@ -313,47 +326,7 @@ app.post('/api/test/email', async (req, res) => {
     }
 });
 
-// API endpoints for authentication
-app.post('/api/auth/register', async (req, res) => {
-    const { username, email, password } = req.body;
-    
-    if (!username || !email || !password) {
-        return res.status(400).json({ success: false, error: 'Все поля обязательны для заполнения' });
-    }
-    
-    if (username.length < 3) {
-        return res.status(400).json({ success: false, error: 'Имя пользователя должно содержать минимум 3 символа' });
-    }
-    
-    if (password.length < 6) {
-        return res.status(400).json({ success: false, error: 'Пароль должен содержать минимум 6 символов' });
-    }
-    
-    try {
-        const bcrypt = require('bcrypt');
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-        
-        const hash = await bcrypt.hash(password, 10);
-        
-        const result = await query(
-            `INSERT INTO users (username, email, password_hash, verification_code, verification_code_expires) 
-             VALUES ($1, $2, $3, $4, $5) 
-             RETURNING *`,
-            [username, email, hash, verificationCode, expiresAt]
-        );
-        
-        console.log(`Verification code for ${email}: ${verificationCode}`);
-        res.json({ success: true, message: 'Код подтверждения отправлен на ваш email' });
-        
-    } catch (error) {
-        if (error.code === '23505') { // Unique constraint violation
-            return res.status(400).json({ success: false, error: 'Пользователь с таким именем или email уже существует' });
-        }
-        console.error('Registration error:', error);
-        res.status(500).json({ success: false, error: 'Ошибка при регистрации' });
-    }
-});
+// API endpoints for authentication are now handled by imported handlers above
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
