@@ -43,20 +43,15 @@
 
                 <!-- Auth Forms Container -->
                 <div class="auth-forms">
-                    <!-- Login Form -->
+                    <!-- Login Form (Email code) -->
                     <form id="loginForm" class="auth-form">
-                        <h2>Войти в чат</h2>
+                        <h2>Войти по email</h2>
                         <div class="form-group">
-                            <label for="username">Имя пользователя:</label>
-                            <input type="text" id="username" name="username" required minlength="3" maxlength="50" 
-                                   placeholder="Введите имя пользователя">
+                            <label for="loginEmail">Email:</label>
+                            <input type="email" id="loginEmail" name="email" required 
+                                   placeholder="Введите email">
                         </div>
-                        <div class="form-group">
-                            <label for="password">Пароль:</label>
-                            <input type="password" id="password" name="password" required minlength="4" 
-                                   placeholder="Введите пароль">
-                        </div>
-                        <button type="submit" class="btn-primary">Войти</button>
+                        <button type="submit" class="btn-primary">Получить код</button>
                         
                         <div class="divider">
                             <span>или</span>

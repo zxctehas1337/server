@@ -181,6 +181,103 @@ app.post('/api/auth/register', (req, res) => {
     });
 });
 
+// Email login: start (send code)
+app.post('/api/auth/login-email-start', (req, res) => {
+    const { email } = req.body;
+
+    if (!email || !email.includes('@')) {
+        return res.status(400).json({ success: false, error: 'Пожалуйста, введите корректный email' });
+    }
+
+    db.get(
+        `SELECT id, username, email, email_verified FROM users WHERE email = ?`,
+        [email],
+        (err, user) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: 'Ошибка при поиске пользователя' });
+            }
+
+            if (!user) {
+                return res.status(400).json({ success: false, error: 'Пользователь с таким email не найден' });
+            }
+
+            if (!user.email_verified) {
+                return res.status(400).json({ success: false, error: 'Email не подтвержден. Завершите регистрацию.' });
+            }
+
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+            db.run(
+                `UPDATE users 
+                 SET verification_code = ?, verification_code_expires = ?
+                 WHERE id = ?`,
+                [verificationCode, expiresAt.toISOString(), user.id],
+                (updateErr) => {
+                    if (updateErr) {
+                        return res.status(500).json({ success: false, error: 'Ошибка при создании кода' });
+                    }
+
+                    console.log(`Login code for ${email}: ${verificationCode}`);
+                    return res.json({ success: true, message: 'Код входа отправлен на ваш email' });
+                }
+            );
+        }
+    );
+});
+
+// Email login: verify code and return token
+app.post('/api/auth/login-email-verify', (req, res) => {
+    const { email, code } = req.body;
+
+    if (!email || !email.includes('@') || !code || code.length !== 6) {
+        return res.status(400).json({ success: false, error: 'Неверные данные' });
+    }
+
+    db.get(
+        `SELECT id, username, email, avatar_url, verification_code_expires 
+         FROM users 
+         WHERE email = ? AND verification_code = ?`,
+        [email, code],
+        (err, user) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: 'Ошибка при проверке кода' });
+            }
+
+            if (!user) {
+                return res.status(400).json({ success: false, error: 'Неверный код' });
+            }
+
+            if (new Date() > new Date(user.verification_code_expires)) {
+                return res.status(400).json({ success: false, error: 'Код истек' });
+            }
+
+            // Clear code and mark last_seen
+            db.run(
+                `UPDATE users 
+                 SET verification_code = NULL, verification_code_expires = NULL, last_seen = CURRENT_TIMESTAMP
+                 WHERE id = ?`,
+                [user.id],
+                (updateErr) => {
+                    if (updateErr) {
+                        return res.status(500).json({ success: false, error: 'Ошибка при обновлении пользователя' });
+                    }
+
+                    const tokenPayload = {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        avatar_url: user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent((user.username || user.email).toLowerCase())}&backgroundColor=6366f1`
+                    };
+                    const token = Buffer.from(JSON.stringify(tokenPayload)).toString('base64');
+
+                    return res.json({ success: true, token });
+                }
+            );
+        }
+    );
+});
+
 app.post('/api/auth/verify-email', (req, res) => {
     const { code } = req.body;
     
@@ -356,97 +453,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Handle login (only for existing users)
-    socket.on('login', (data) => {
-        const { username, password } = data;
-        
-        if (!username || !password || username.length < 3 || password.length < 4) {
-            socket.emit('login_error', { error: 'Неверные учетные данные' });
-            return;
-        }
-        
-        const bcrypt = require('bcrypt');
-        
-        db.get(
-            'SELECT id, username, password_hash, email, email_verified, avatar_url FROM users WHERE username = ?',
-            [username],
-            (err, user) => {
-                if (err) {
-                    socket.emit('login_error', { error: 'Ошибка сервера при входе' });
-                    return;
-                }
-                
-                if (!user) {
-                    socket.emit('login_error', { error: 'Пользователь не найден. Зарегистрируйтесь через email или войдите через GitHub.' });
-                    return;
-                }
-                
-                // Check if email is verified (for non-OAuth users)
-                if (user.email && !user.email_verified && !user.is_oauth_user) {
-                    socket.emit('login_error', { error: 'Пожалуйста, подтвердите ваш email перед входом' });
-                    return;
-                }
-                
-                bcrypt.compare(password, user.password_hash, (err, isMatch) => {
-                    if (err || !isMatch) {
-                        socket.emit('login_error', { error: 'Неверное имя пользователя или пароль' });
-                        return;
-                    }
-                    
-                    // Generate avatar URL if not set
-                    let avatarUrl = user.avatar_url;
-                    if (!avatarUrl) {
-                        avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username.toLowerCase())}&backgroundColor=6366f1`;
-                        db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, user.id]);
-                    }
-                    
-                    // Update last seen
-                    db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
-                    
-                    // Store user info for this socket
-                    connectedUsers.set(socket.id, {
-                        username: user.username,
-                        userId: user.id,
-                        roomId: 1
-                    });
-                    
-                    // Initialize user rooms
-                    if (!userRooms.has(user.id)) {
-                        userRooms.set(user.id, new Set([1]));
-                    }
-                    
-                    // Join user to general room
-                    socket.join('room_1');
-                    
-                    // Send success response
-                    socket.emit('login_success', {
-                        success: true,
-                        user: {
-                            id: user.id,
-                            username: user.username,
-                            avatar_url: avatarUrl,
-                            email: user.email,
-                            email_verified: user.email_verified
-                        }
-                    });
-                    
-                    // Add user to general chat room
-                    db.run('INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
-                    
-                    // Broadcast online users
-                    broadcastOnlineUsers();
-                    
-                    // Notify others
-                    socket.broadcast.emit('user_joined', {
-                        username: user.username,
-                        message: `${user.username} joined the chat`
-                    });
-                    
-                    console.log(`User logged in: ${user.username} (ID: ${user.id})`);
-                });
-            }
-        );
-    });
+    // Username/password login removed in favor of GitHub OAuth and Email code login
     
     // Handle joining room
     socket.on('join_room', (data) => {

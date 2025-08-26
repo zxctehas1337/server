@@ -17,9 +17,8 @@ const registerForm = document.getElementById('registerForm');
 const emailVerificationForm = document.getElementById('emailVerificationForm');
 const messageForm = document.getElementById('messageForm');
 
-// Login form elements
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
+// Login form elements (email-only)
+const loginEmailInput = document.getElementById('loginEmail');
 
 // Register form elements
 const regUsernameInput = document.getElementById('regUsername');
@@ -149,8 +148,7 @@ function resetToLogin() {
   chatContainer.style.display = 'none';
   
   // Clear forms and messages
-  usernameInput.value = '';
-  passwordInput.value = '';
+  if (loginEmailInput) loginEmailInput.value = '';
   messageInput.value = '';
   messagesDiv.innerHTML = '';
   onlineUsersList.innerHTML = '';
@@ -166,8 +164,8 @@ function resetToLogin() {
     sendButton.disabled = false;
   }
   
-  // Focus username input
-  usernameInput.focus();
+  // Focus email input
+  if (loginEmailInput) loginEmailInput.focus();
   
   showStatus('Connection lost. Please login again.', 'error');
 
@@ -505,40 +503,40 @@ socket.on('error', (data) => {
 });
 
 // Form Event Handlers
+// Email login start (request code)
+let emailLoginContext = { email: null };
 loginForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  
-  const username = usernameInput.value.trim();
-  const password = passwordInput.value.trim();
-  
-  if (!username || !password) {
-    showStatus('Пожалуйста, введите имя пользователя и пароль', 'error');
+  const email = loginEmailInput ? loginEmailInput.value.trim() : '';
+  if (!email || !email.includes('@')) {
+    showStatus('Пожалуйста, введите корректный email', 'error');
     return;
   }
-  
-  if (username.length < 3) {
-    showStatus('Имя пользователя должно содержать минимум 3 символа', 'error');
-    return;
-  }
-  
-  if (password.length < 4) {
-    showStatus('Пароль должен содержать минимум 4 символа', 'error');
-    return;
-  }
-  
-  // Disable form while processing
   const submitButton = loginForm.querySelector('button');
   const originalText = submitButton.textContent;
-  submitButton.textContent = 'Вход...';
+  submitButton.textContent = 'Отправка кода...';
   submitButton.disabled = true;
-  
-  socket.emit('login', { username, password });
-  
-  // Re-enable form after timeout
-  setTimeout(() => {
+
+  fetch('/api/auth/login-email-start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      emailLoginContext.email = email;
+      showStatus('Код отправлен на ваш email', 'success');
+      showVerificationForm(email);
+    } else {
+      showStatus(data.error || 'Ошибка при отправке кода', 'error');
+    }
+  })
+  .catch(() => showStatus('Ошибка при отправке кода', 'error'))
+  .finally(() => {
     submitButton.textContent = originalText;
     submitButton.disabled = false;
-  }, 5000);
+  });
 });
 
 // Register form handler
@@ -614,6 +612,7 @@ emailVerificationForm.addEventListener('submit', (e) => {
   e.preventDefault();
   
   const code = verificationCodeInput.value.trim();
+  const emailForVerification = verificationEmailSpan.textContent;
   
   if (!code || code.length !== 6) {
     showStatus('Пожалуйста, введите 6-значный код', 'error');
@@ -626,21 +625,33 @@ emailVerificationForm.addEventListener('submit', (e) => {
   submitButton.textContent = 'Проверка...';
   submitButton.disabled = true;
   
+  // Determine flow: login vs registration
+  const isLoginFlow = emailLoginContext.email && emailLoginContext.email.toLowerCase() === (emailForVerification || '').toLowerCase();
+  const url = isLoginFlow ? '/api/auth/login-email-verify' : '/api/auth/verify-email';
+  const payload = isLoginFlow ? { email: emailForVerification, code } : { code };
+
   // Send verification request
-  fetch('/api/auth/verify-email', {
+  fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ code })
+    body: JSON.stringify(payload)
   })
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      showStatus('Email подтвержден! Теперь вы можете войти', 'success');
-      showLoginForm();
-      // Clear register form
-      registerForm.reset();
+      if (isLoginFlow && data.token) {
+        localStorage.setItem('accessToken', data.token);
+        showStatus('Вход по email выполнен', 'success');
+        socket.emit('authenticate_with_token', { token: data.token });
+        emailLoginContext.email = null;
+      } else {
+        showStatus('Email подтвержден! Теперь вы можете войти', 'success');
+        showLoginForm();
+        // Clear register form
+        registerForm.reset();
+      }
     } else {
       showStatus(data.error || 'Неверный код подтверждения', 'error');
     }
@@ -790,7 +801,7 @@ function showLoginForm() {
   loginForm.style.display = 'block';
   registerForm.style.display = 'none';
   emailVerificationForm.style.display = 'none';
-  usernameInput.focus();
+  if (loginEmailInput) loginEmailInput.focus();
 }
 
 function showRegisterForm() {
@@ -833,14 +844,16 @@ githubLoginFromRegisterBtn.addEventListener('click', () => {
   window.location.href = '/api/auth/github';
 });
 
-// Email login handler
-emailLoginBtn.addEventListener('click', () => {
-  showRegisterForm();
-});
+// Email login handler (ensure login form visible)
+if (emailLoginBtn) {
+  emailLoginBtn.addEventListener('click', () => {
+    showLoginForm();
+  });
+}
 
-// Auto-focus on username input when page loads
+// Auto-focus on email input when page loads
 document.addEventListener('DOMContentLoaded', () => {
-  usernameInput.focus();
+  if (loginEmailInput) loginEmailInput.focus();
   
   // Handle token returned via query param after OAuth callback
   try {
