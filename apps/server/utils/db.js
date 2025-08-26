@@ -6,7 +6,7 @@ let pool;
 function getPool() {
   if (!pool) {
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'browser_messenger'}`,
+      connectionString: process.env.DATABASE_URL || `postgresql://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || 'password'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'backend1_8r17'}`,
       // Optimize for serverless
       max: 1, // Limit pool size for serverless
       idleTimeoutMillis: 10000,
