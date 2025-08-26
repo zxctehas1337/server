@@ -9,7 +9,7 @@ const socket = io({
   randomizationFactor: 0.5,
 });
 
-// DOM Elements
+// DOM Elements - with null checks
 const loginContainer = document.getElementById('loginContainer');
 const chatContainer = document.getElementById('chatContainer');
 const loginForm = document.getElementById('loginForm');
@@ -63,6 +63,42 @@ const invitationNotification = document.getElementById('invitationNotification')
 const invitationNotificationAvatar = document.getElementById('invitationNotificationAvatar');
 const invitationNotificationTitle = document.getElementById('invitationNotificationTitle');
 const invitationNotificationMessage = document.getElementById('invitationNotificationMessage');
+
+// Check if required elements exist
+if (!loginForm) console.warn('loginForm not found');
+if (!registerForm) console.warn('registerForm not found');
+if (!emailVerificationForm) console.warn('emailVerificationForm not found');
+if (!messageForm) console.warn('messageForm not found');
+
+// Check if CSS is loaded
+function checkCSSLoaded() {
+  const styles = document.styleSheets;
+  let cssLoaded = false;
+  
+  for (let i = 0; i < styles.length; i++) {
+    try {
+      if (styles[i].href && styles[i].href.includes('style.css')) {
+        cssLoaded = true;
+        break;
+      }
+    } catch (e) {
+      // CORS error, skip
+    }
+  }
+  
+  if (!cssLoaded) {
+    console.warn('CSS file not loaded properly. Trying to reload...');
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'style.css';
+    link.onload = () => console.log('CSS loaded successfully');
+    link.onerror = () => console.error('Failed to load CSS');
+    document.head.appendChild(link);
+  }
+}
+
+// Check CSS on page load
+document.addEventListener('DOMContentLoaded', checkCSSLoaded);
 
 // Application state
 let currentUser = null;
@@ -505,80 +541,95 @@ socket.on('error', (data) => {
 // Form Event Handlers
 // Email login start (request code)
 let emailLoginContext = { email: null };
-loginForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = loginEmailInput ? loginEmailInput.value.trim() : '';
-  if (!email || !email.includes('@')) {
-    showStatus('Пожалуйста, введите корректный email', 'error');
-    return;
-  }
-  const submitButton = loginForm.querySelector('button');
-  const originalText = submitButton.textContent;
-  submitButton.textContent = 'Отправка кода...';
-  submitButton.disabled = true;
 
-  fetch('/api/auth/login-email-start', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.success) {
-      emailLoginContext.email = email;
-      showStatus('Код отправлен на ваш email', 'success');
-      showVerificationForm(email);
-    } else {
-      showStatus(data.error || 'Ошибка при отправке кода', 'error');
+// Only add event listeners if forms exist
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = loginEmailInput ? loginEmailInput.value.trim() : '';
+    if (!email || !email.includes('@')) {
+      showStatus('Пожалуйста, введите корректный email', 'error');
+      return;
     }
-  })
-  .catch(() => showStatus('Ошибка при отправке кода', 'error'))
-  .finally(() => {
-    submitButton.textContent = originalText;
-    submitButton.disabled = false;
+    const submitButton = loginForm.querySelector('button');
+    if (!submitButton) {
+      showStatus('Ошибка: кнопка отправки не найдена', 'error');
+      return;
+    }
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Отправка кода...';
+    submitButton.disabled = true;
+
+    fetch('/api/auth/login-email-start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        emailLoginContext.email = email;
+        showStatus('Код отправлен на ваш email', 'success');
+        showVerificationForm(email);
+      } else {
+        showStatus(data.error || 'Ошибка при отправке кода', 'error');
+      }
+    })
+    .catch(() => showStatus('Ошибка при отправке кода', 'error'))
+    .finally(() => {
+      if (submitButton) {
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+      }
+    });
   });
-});
+}
 
 // Register form handler
-registerForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  
-  const username = regUsernameInput.value.trim();
-  const email = regEmailInput.value.trim();
-  const password = regPasswordInput.value;
-  const passwordConfirm = regPasswordConfirmInput.value;
-  
-  // Validation
-  if (!username || !email || !password || !passwordConfirm) {
-    showStatus('Пожалуйста, заполните все поля', 'error');
-    return;
-  }
-  
-  if (username.length < 3) {
-    showStatus('Имя пользователя должно содержать минимум 3 символа', 'error');
-    return;
-  }
-  
-  if (password.length < 6) {
-    showStatus('Пароль должен содержать минимум 6 символов', 'error');
-    return;
-  }
-  
-  if (password !== passwordConfirm) {
-    showStatus('Пароли не совпадают', 'error');
-    return;
-  }
-  
-  if (!email.includes('@')) {
-    showStatus('Пожалуйста, введите корректный email', 'error');
-    return;
-  }
-  
-  // Disable form while processing
-  const submitButton = registerForm.querySelector('button');
-  const originalText = submitButton.textContent;
-  submitButton.textContent = 'Регистрация...';
-  submitButton.disabled = true;
+if (registerForm) {
+  registerForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const username = regUsernameInput ? regUsernameInput.value.trim() : '';
+    const email = regEmailInput ? regEmailInput.value.trim() : '';
+    const password = regPasswordInput ? regPasswordInput.value : '';
+    const passwordConfirm = regPasswordConfirmInput ? regPasswordConfirmInput.value : '';
+    
+    // Validation
+    if (!username || !email || !password || !passwordConfirm) {
+      showStatus('Пожалуйста, заполните все поля', 'error');
+      return;
+    }
+    
+    if (username.length < 3) {
+      showStatus('Имя пользователя должно содержать минимум 3 символа', 'error');
+      return;
+    }
+    
+    if (password.length < 6) {
+      showStatus('Пароль должен содержать минимум 6 символов', 'error');
+      return;
+    }
+    
+    if (password !== passwordConfirm) {
+      showStatus('Пароли не совпадают', 'error');
+      return;
+    }
+    
+    if (!email.includes('@')) {
+      showStatus('Пожалуйста, введите корректный email', 'error');
+      return;
+    }
+    
+    // Disable form while processing
+    const submitButton = registerForm.querySelector('button');
+    if (!submitButton) {
+      showStatus('Ошибка: кнопка отправки не найдена', 'error');
+      return;
+    }
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Регистрация...';
+    submitButton.disabled = true;
   
   // Send registration request
   fetch('/api/auth/register', {
@@ -602,28 +653,36 @@ registerForm.addEventListener('submit', (e) => {
     showStatus('Ошибка при регистрации', 'error');
   })
   .finally(() => {
-    submitButton.textContent = originalText;
-    submitButton.disabled = false;
+    if (submitButton) {
+      submitButton.textContent = originalText;
+      submitButton.disabled = false;
+    }
   });
-});
+  });
+}
 
 // Email verification form handler
-emailVerificationForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  
-  const code = verificationCodeInput.value.trim();
-  const emailForVerification = verificationEmailSpan.textContent;
-  
-  if (!code || code.length !== 6) {
-    showStatus('Пожалуйста, введите 6-значный код', 'error');
-    return;
-  }
-  
-  // Disable form while processing
-  const submitButton = emailVerificationForm.querySelector('button');
-  const originalText = submitButton.textContent;
-  submitButton.textContent = 'Проверка...';
-  submitButton.disabled = true;
+if (emailVerificationForm) {
+  emailVerificationForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const code = verificationCodeInput ? verificationCodeInput.value.trim() : '';
+    const emailForVerification = verificationEmailSpan ? verificationEmailSpan.textContent : '';
+    
+    if (!code || code.length !== 6) {
+      showStatus('Пожалуйста, введите 6-значный код', 'error');
+      return;
+    }
+    
+    // Disable form while processing
+    const submitButton = emailVerificationForm.querySelector('button');
+    if (!submitButton) {
+      showStatus('Ошибка: кнопка отправки не найдена', 'error');
+      return;
+    }
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Проверка...';
+    submitButton.disabled = true;
   
   // Determine flow: login vs registration
   const isLoginFlow = emailLoginContext.email && emailLoginContext.email.toLowerCase() === (emailForVerification || '').toLowerCase();
@@ -661,22 +720,31 @@ emailVerificationForm.addEventListener('submit', (e) => {
     showStatus('Ошибка при проверке кода', 'error');
   })
   .finally(() => {
-    submitButton.textContent = originalText;
-    submitButton.disabled = false;
+    if (submitButton) {
+      submitButton.textContent = originalText;
+      submitButton.disabled = false;
+    }
   });
-});
+  });
+}
 
 // Resend code button handler
-document.getElementById('resendCodeBtn').addEventListener('click', () => {
-  const email = regEmailInput.value.trim();
-  if (!email) {
-    showStatus('Email не найден', 'error');
-    return;
-  }
-  
-  const button = document.getElementById('resendCodeBtn');
-  button.disabled = true;
-  button.textContent = 'Отправка...';
+const resendCodeBtn = document.getElementById('resendCodeBtn');
+if (resendCodeBtn) {
+  resendCodeBtn.addEventListener('click', () => {
+    const email = regEmailInput ? regEmailInput.value.trim() : '';
+    if (!email) {
+      showStatus('Email не найден', 'error');
+      return;
+    }
+    
+    const button = document.getElementById('resendCodeBtn');
+    if (!button) {
+      showStatus('Ошибка: кнопка не найдена', 'error');
+      return;
+    }
+    button.disabled = true;
+    button.textContent = 'Отправка...';
   
   fetch('/api/auth/resend-code', {
     method: 'POST',
@@ -698,12 +766,16 @@ document.getElementById('resendCodeBtn').addEventListener('click', () => {
     showStatus('Ошибка при отправке кода', 'error');
   })
   .finally(() => {
-    button.disabled = false;
-    button.textContent = 'Отправить снова';
+    if (button) {
+      button.disabled = false;
+      button.textContent = 'Отправить снова';
+    }
   });
-});
+  });
+}
 
-messageForm.addEventListener('submit', (e) => {
+if (messageForm) {
+  messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
   
   const content = messageInput.value.trim();
@@ -759,16 +831,20 @@ messageForm.addEventListener('submit', (e) => {
   
   // Re-enable button after delay
   setTimeout(() => {
-    sendButton.disabled = false;
-    messageInput.focus();
+    if (sendButton) sendButton.disabled = false;
+    if (messageInput) messageInput.focus();
   }, 500);
-});
+  });
+}
 
 // Theme toggle event handler
-themeToggle.addEventListener('click', toggleTheme);
+if (themeToggle) {
+  themeToggle.addEventListener('click', toggleTheme);
+}
 
 // New chat button handler
-newChatBtn.addEventListener('click', () => {
+if (newChatBtn) {
+  newChatBtn.addEventListener('click', () => {
   // For now, just show a simple prompt
   const username = prompt('Enter username to start a private chat:');
   if (username && username.trim()) {
@@ -781,68 +857,84 @@ newChatBtn.addEventListener('click', () => {
       showStatus('User not found or not online', 'error');
     }
   }
-});
+  });
+}
 
 // General chat click handler
-document.querySelector('.chat-item').addEventListener('click', () => {
-  switchChat({ id: 1, name: 'General Chat', type: 'general' });
-});
+const generalChatItem = document.querySelector('.chat-item');
+if (generalChatItem) {
+  generalChatItem.addEventListener('click', () => {
+    switchChat({ id: 1, name: 'General Chat', type: 'general' });
+  });
+}
 
 // Keyboard shortcuts
-messageInput.addEventListener('keydown', (e) => {
+if (messageInput) {
+  messageInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    messageForm.dispatchEvent(new Event('submit'));
+    if (messageForm) messageForm.dispatchEvent(new Event('submit'));
   }
-});
+  });
+}
 
 // Form switching functions
 function showLoginForm() {
-  loginForm.style.display = 'block';
-  registerForm.style.display = 'none';
-  emailVerificationForm.style.display = 'none';
+  if (loginForm) loginForm.style.display = 'block';
+  if (registerForm) registerForm.style.display = 'none';
+  if (emailVerificationForm) emailVerificationForm.style.display = 'none';
   if (loginEmailInput) loginEmailInput.focus();
 }
 
 function showRegisterForm() {
-  loginForm.style.display = 'none';
-  registerForm.style.display = 'block';
-  emailVerificationForm.style.display = 'none';
-  regUsernameInput.focus();
+  if (loginForm) loginForm.style.display = 'none';
+  if (registerForm) registerForm.style.display = 'block';
+  if (emailVerificationForm) emailVerificationForm.style.display = 'none';
+  if (regUsernameInput) regUsernameInput.focus();
 }
 
 function showVerificationForm(email) {
-  loginForm.style.display = 'none';
-  registerForm.style.display = 'none';
-  emailVerificationForm.style.display = 'block';
-  verificationEmailSpan.textContent = email;
-  verificationCodeInput.focus();
+  if (loginForm) loginForm.style.display = 'none';
+  if (registerForm) registerForm.style.display = 'none';
+  if (emailVerificationForm) emailVerificationForm.style.display = 'block';
+  if (verificationEmailSpan) verificationEmailSpan.textContent = email;
+  if (verificationCodeInput) verificationCodeInput.focus();
 }
 
 // Form navigation event listeners
-showRegisterBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  showRegisterForm();
-});
+if (showRegisterBtn) {
+  showRegisterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showRegisterForm();
+  });
+}
 
-showLoginBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  showLoginForm();
-});
+if (showLoginBtn) {
+  showLoginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showLoginForm();
+  });
+}
 
-backToRegisterBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  showRegisterForm();
-});
+if (backToRegisterBtn) {
+  backToRegisterBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    showRegisterForm();
+  });
+}
 
 // GitHub OAuth handlers
-githubLoginBtn.addEventListener('click', () => {
-  window.location.href = '/api/auth/github';
-});
+if (githubLoginBtn) {
+  githubLoginBtn.addEventListener('click', () => {
+    window.location.href = '/api/auth/github';
+  });
+}
 
-githubLoginFromRegisterBtn.addEventListener('click', () => {
-  window.location.href = '/api/auth/github';
-});
+if (githubLoginFromRegisterBtn) {
+  githubLoginFromRegisterBtn.addEventListener('click', () => {
+    window.location.href = '/api/auth/github';
+  });
+}
 
 // Email login handler (ensure login form visible)
 if (emailLoginBtn) {
