@@ -309,9 +309,14 @@ app.post('/api/admin/delete-users', adminGuard, async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        // Remove messages to avoid FK, then participants, then users
+        // Delete in correct order to avoid FK constraint violations:
+        // 1. Messages (references users and rooms)
+        // 2. Chat room participants (references users and rooms) 
+        // 3. Chat rooms (references users via created_by)
+        // 4. Users (finally safe to delete)
         await client.query('DELETE FROM messages');
         await client.query('DELETE FROM chat_room_participants');
+        await client.query('DELETE FROM chat_rooms');
         const result = await client.query('DELETE FROM users');
         await client.query('COMMIT');
         // Clear runtime state
