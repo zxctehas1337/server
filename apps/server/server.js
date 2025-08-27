@@ -727,7 +727,8 @@ io.on('connection', (socket) => {
             [userInfo.userId, targetRoomId, content.trim()],
             function(err) {
                 if (err) {
-                    socket.emit('error', { message: 'Failed to send message' });
+                    // Use a custom event name instead of reserved 'error'
+                    socket.emit('server_error', { message: 'Failed to send message' });
                     return;
                 }
                 
