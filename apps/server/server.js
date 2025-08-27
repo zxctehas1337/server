@@ -290,6 +290,67 @@ app.post('/api/auth/register', (req, res) => {
     });
 });
 
+// Username/password login
+app.post('/api/auth/login', (req, res) => {
+    const { username, email, identifier, password } = req.body;
+
+    const loginIdentifier = identifier || email || username;
+
+    if (!loginIdentifier || !password) {
+        return res.status(400).json({ success: false, error: 'Имя пользователя/Email и пароль обязательны' });
+    }
+
+    db.get(
+        'SELECT id, username, password_hash, avatar_url, email, email_verified FROM users WHERE username = ? OR email = ?',
+        [loginIdentifier, loginIdentifier],
+        (err, user) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: 'Ошибка при поиске пользователя' });
+            }
+
+            if (!user) {
+                return res.status(401).json({ success: false, error: 'Неверное имя пользователя или пароль' });
+            }
+
+            // If user registered with email/password, enforce verified email before login
+            if (user.email && !user.email_verified) {
+                return res.status(401).json({ success: false, error: 'Пожалуйста, подтвердите ваш email перед входом' });
+            }
+
+            const bcrypt = require('bcrypt');
+            bcrypt.compare(password, user.password_hash || '', (compareErr, isMatch) => {
+                if (compareErr) {
+                    return res.status(500).json({ success: false, error: 'Ошибка при проверке пароля' });
+                }
+
+                if (!isMatch) {
+                    return res.status(401).json({ success: false, error: 'Неверное имя пользователя или пароль' });
+                }
+
+                // Ensure avatar_url is present
+                const seed = (user.username || user.email || loginIdentifier).toLowerCase();
+                const avatarUrl = user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=6366f1`;
+
+                // Update last seen and avatar if missing
+                db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP, avatar_url = COALESCE(avatar_url, ?) WHERE id = ?', [avatarUrl, user.id]);
+
+                // Ensure user is in general chat room
+                db.run('INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
+
+                const tokenPayload = {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    avatar_url: avatarUrl
+                };
+                const token = Buffer.from(JSON.stringify(tokenPayload)).toString('base64');
+
+                return res.json({ success: true, token });
+            });
+        }
+    );
+});
+
 // Email login: start (send code)
 app.post('/api/auth/login-email-start', (req, res) => {
     const { email } = req.body;
