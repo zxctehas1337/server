@@ -17,8 +17,9 @@ const registerForm = document.getElementById('registerForm');
 const emailVerificationForm = document.getElementById('emailVerificationForm');
 const messageForm = document.getElementById('messageForm');
 
-// Login form elements (email-only)
+// Login form elements (email + password)
 const loginEmailInput = document.getElementById('loginEmail');
+const loginPasswordInput = document.getElementById('loginPassword');
 
 // Register form elements
 const regUsernameInput = document.getElementById('regUsername');
@@ -547,8 +548,13 @@ if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = loginEmailInput ? loginEmailInput.value.trim() : '';
+    const password = loginPasswordInput ? loginPasswordInput.value : '';
     if (!email || !email.includes('@')) {
       showStatus('Пожалуйста, введите корректный email', 'error');
+      return;
+    }
+    if (!password || password.length < 6) {
+      showStatus('Пароль должен содержать минимум 6 символов', 'error');
       return;
     }
     const submitButton = loginForm.querySelector('button');
@@ -557,25 +563,24 @@ if (loginForm) {
       return;
     }
     const originalText = submitButton.textContent;
-    submitButton.textContent = 'Отправка кода...';
+    submitButton.textContent = 'Вход...';
     submitButton.disabled = true;
 
-    fetch('/api/auth/login-email-start', {
+    fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, password })
     })
     .then(r => r.json())
     .then(data => {
-      if (data.success) {
-        emailLoginContext.email = email;
-        showStatus('Код отправлен на ваш email', 'success');
-        showVerificationForm(email);
+      if (data.success && data.token) {
+        localStorage.setItem('accessToken', data.token);
+        socket.emit('authenticate_with_token', { token: data.token });
       } else {
-        showStatus(data.error || 'Ошибка при отправке кода', 'error');
+        showStatus(data.error || 'Ошибка входа', 'error');
       }
     })
-    .catch(() => showStatus('Ошибка при отправке кода', 'error'))
+    .catch(() => showStatus('Ошибка входа', 'error'))
     .finally(() => {
       if (submitButton) {
         submitButton.textContent = originalText;
@@ -936,12 +941,7 @@ if (githubLoginFromRegisterBtn) {
   });
 }
 
-// Email login handler (ensure login form visible)
-if (emailLoginBtn) {
-  emailLoginBtn.addEventListener('click', () => {
-    showLoginForm();
-  });
-}
+// Remove emailLoginBtn behavior (button removed from DOM)
 
 // Auto-focus on email input when page loads
 document.addEventListener('DOMContentLoaded', () => {

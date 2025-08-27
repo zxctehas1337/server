@@ -43,7 +43,7 @@
 
                 <!-- Auth Forms Container -->
                 <div class="auth-forms">
-                    <!-- Login Form (Email code) -->
+                    <!-- Login Form (Email + Password) -->
                     <form id="loginForm" class="auth-form">
                         <h2>Войти по email</h2>
                         <div class="form-group">
@@ -51,7 +51,12 @@
                             <input type="email" id="loginEmail" name="email" required 
                                    placeholder="Введите email">
                         </div>
-                        <button type="submit" class="btn-primary">Получить код</button>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль:</label>
+                            <input type="password" id="loginPassword" name="password" required 
+                                   placeholder="Введите пароль">
+                        </div>
+                        <button type="submit" class="btn-primary">Войти</button>
                         
                         <div class="divider">
                             <span>или</span>
@@ -65,13 +70,7 @@
                             <span>Продолжить с GitHub</span>
                         </button>
                         
-                        <!-- Email Login Button -->
-                        <button type="button" id="emailLoginBtn" class="oauth-btn email-btn">
-                            <svg class="email-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                            </svg>
-                            <span>Войти через Email</span>
-                        </button>
+                        <!-- Email login button removed; direct form above -->
                         
                         <div class="form-footer">
                             <p>Нет аккаунта? <a href="#" id="showRegisterBtn">Зарегистрироваться через email</a></p>
