@@ -355,7 +355,12 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', (reason) => {
-  console.log('Disconnected from server. Reason:', reason);
+  try {
+    const hasToken = !!localStorage.getItem('accessToken');
+    console.log('Disconnected from server. Reason:', reason, 'hasToken:', hasToken, 'hadUser:', !!currentUser);
+  } catch (_) {
+    console.log('Disconnected from server. Reason:', reason);
+  }
   isConnected = false;
   
   // Check if this is an unexpected disconnect (not user-initiated)
@@ -930,6 +935,13 @@ socket.on('reconnect', (attemptNumber) => {
   console.log('Reconnected to server');
   showStatus('Reconnected to server', 'success');
   isConnected = true;
+  // Ensure authentication is restored on reconnect
+  try {
+    const storedToken = localStorage.getItem('accessToken');
+    if (storedToken) {
+      socket.emit('authenticate_with_token', { token: storedToken });
+    }
+  } catch (_) {}
 });
 
 socket.on('reconnecting', (attemptNumber) => {
