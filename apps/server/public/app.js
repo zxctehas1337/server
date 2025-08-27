@@ -168,7 +168,7 @@ function toggleTheme() {
 function updateThemeIcon() {
   const themeIcon = document.querySelector('.theme-icon');
   if (themeIcon) {
-    themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+    themeIcon.textContent = theme === 'light' ? 'Theme' : 'Theme';
   }
 }
 

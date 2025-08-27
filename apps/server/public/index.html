@@ -16,17 +16,17 @@
         <header class="header">
             <div class="header-left">
                 <button id="mobileNavBtn" class="mobile-nav-btn" title="Toggle Menu">
-                    <span>☰</span>
+                    <span>Menu</span>
                 </button>
                 <div class="logo">
-                    <div class="logo-icon">⚡</div>
+                    <div class="logo-icon" aria-hidden="true"></div>
                     <h1>Kracken</h1>
                 </div>
             </div>
             <div class="header-right">
                 <div id="userInfo" class="user-info"></div>
                 <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
-                    <span class="theme-icon">🌙</span>
+                    <span class="theme-icon">Theme</span>
                 </button>
             </div>
         </header>
@@ -36,7 +36,7 @@
             <div class="auth-container">
                 <!-- Welcome Section -->
                 <div class="welcome-section">
-                    <div class="logo-large">⚡</div>
+                    <div class="logo-large" aria-hidden="true"></div>
                     <h1>Добро пожаловать в Kracken</h1>
                     <p>Быстрый и безопасный мессенджер</p>
                 </div>
@@ -176,7 +176,7 @@
                         </div>
                     </div>
                     <div class="chat-header-actions">
-                        <button id="chatSettingsBtn" class="icon-btn" title="Chat Settings">⚙️</button>
+                        <button id="chatSettingsBtn" class="icon-btn" title="Chat Settings">Settings</button>
                     </div>
                 </div>
 
@@ -188,12 +188,12 @@
                 <!-- Message Input Form -->
                 <form id="messageForm" class="message-form">
                     <div class="input-group">
-                        <button type="button" id="attachBtn" class="attachment-btn" title="Attach file">📎</button>
-                        <input type="text" id="messageInput" placeholder="Type your message..." 
+                        <button type="button" id="attachBtn" class="attachment-btn" title="Attach file">Attach</button>
+                        <input type="text" id="messageInput" placeholder="Введите сообщение..." 
                                maxlength="1000" autocomplete="off">
-                        <button type="button" id="emojiBtn" class="emoji-btn" title="Emoji">😊</button>
+                        <button type="button" id="emojiBtn" class="emoji-btn" title="Emoji" style="display:none;"></button>
                         <button type="submit" id="sendBtn" class="send-btn">
-                            <span class="send-icon">➤</span>
+                            <span class="send-icon">Send</span>
                         </button>
                     </div>
                 </form>
