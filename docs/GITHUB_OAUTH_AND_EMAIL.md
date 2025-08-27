@@ -4,7 +4,7 @@
 
 Этот документ описывает как настроить GitHub OAuth аутентификацию и email функционал для вашего мессенджера Kracken.
 
-**🌐 Продакшн сервер**: https://beckend-yaj1.onrender.com
+**🌐 Продакшн сервер**: https://krackenx.onrender.com
 
 ## 🚀 Возможности
 
@@ -33,7 +33,7 @@
 # GitHub OAuth
 GITHUB_CLIENT_ID=your_github_client_id
 GITHUB_CLIENT_SECRET=your_github_client_secret
-GITHUB_CALLBACK_URL=https://beckend-yaj1.onrender.com/api/auth/github/callback
+GITHUB_CALLBACK_URL=https://krackenx.onrender.com/api/auth/github/callback
 
 # JWT для токенов
 JWT_SECRET=your_super_secret_jwt_key
@@ -54,8 +54,8 @@ SMTP_FROM=Kracken <your_email@gmail.com>
 2. Нажмите "New OAuth App"
 3. Заполните форму:
    - **Application name**: Kracken Messenger
-   - **Homepage URL**: `https://beckend-yaj1.onrender.com`
-   - **Authorization callback URL**: `https://beckend-yaj1.onrender.com/api/auth/github/callback`
+   - **Homepage URL**: `https://krackenx.onrender.com`
+   - **Authorization callback URL**: `https://krackenx.onrender.com/api/auth/github/callback`
 4. Нажмите "Register application"
 5. Скопируйте `Client ID` и `Client Secret`
 
@@ -64,7 +64,7 @@ SMTP_FROM=Kracken <your_email@gmail.com>
 ```env
 GITHUB_CLIENT_ID=ваш_client_id
 GITHUB_CLIENT_SECRET=ваш_client_secret
-GITHUB_CALLBACK_URL=https://beckend-yaj1.onrender.com/api/auth/github/callback
+GITHUB_CALLBACK_URL=https://krackenx.onrender.com/api/auth/github/callback
 ```
 
 ## 📧 Настройка Email (Gmail)
@@ -144,17 +144,17 @@ fetch('/api/email/send', {
     body: JSON.stringify({
         template: 'passwordReset',
         to: 'user@example.com',
-        data: { resetLink: 'https://beckend-yaj1.onrender.com/reset?token=abc123' }
+        data: { resetLink: 'https://krackenx.onrender.com/reset?token=abc123' }
     })
 });
 
 // Тестирование OAuth конфигурации
-fetch('https://beckend-yaj1.onrender.com/api/test/github-oauth')
+fetch('https://krackenx.onrender.com/api/test/github-oauth')
     .then(response => response.json())
     .then(data => console.log('OAuth config:', data));
 
 // Тестирование email отправки
-fetch('https://beckend-yaj1.onrender.com/api/test/email', {
+fetch('https://krackenx.onrender.com/api/test/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

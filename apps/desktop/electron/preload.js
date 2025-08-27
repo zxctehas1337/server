@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('electron', {
     }
 });
 
+// No extra globals exposed; renderer loads socket.io via vendor and sets BACKEND_URL in HTML
+
 // Listen for theme changes
 window.addEventListener('DOMContentLoaded', () => {
     // Initialize theme on load

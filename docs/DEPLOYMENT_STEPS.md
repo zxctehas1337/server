@@ -18,7 +18,7 @@ git push origin main
 # GitHub OAuth
 GITHUB_CLIENT_ID=ваш_github_client_id
 GITHUB_CLIENT_SECRET=ваш_github_client_secret
-GITHUB_CALLBACK_URL=https://beckend-yaj1.onrender.com/api/auth/github/callback
+GITHUB_CALLBACK_URL=https://krackenx.onrender.com/api/auth/github/callback
 
 # JWT
 JWT_SECRET=ваш_супер_секретный_ключ
@@ -42,7 +42,7 @@ node scripts/add-email-logs-migration.js
 ### 4. Тестирование
 
 #### Через веб-интерфейс:
-https://beckend-yaj1.onrender.com/test-oauth.html
+https://krackenx.onrender.com/test-oauth.html
 
 #### Через командную строку:
 ```bash
@@ -66,8 +66,8 @@ node test-endpoints.js
 1. Перейдите на https://github.com/settings/developers
 2. Создайте новое OAuth App:
    - **Name**: Kracken Messenger
-   - **Homepage URL**: https://beckend-yaj1.onrender.com
-   - **Authorization callback URL**: https://beckend-yaj1.onrender.com/api/auth/github/callback
+   - **Homepage URL**: https://krackenx.onrender.com
+   - **Authorization callback URL**: https://krackenx.onrender.com/api/auth/github/callback
 3. Скопируйте Client ID и Client Secret в Render
 
 ## 📧 Настройка Email (Gmail)
@@ -81,9 +81,9 @@ node test-endpoints.js
 
 ## ✅ Проверка работоспособности
 
-1. **Статус сервера**: https://beckend-yaj1.onrender.com/api/health
-2. **OAuth конфигурация**: https://beckend-yaj1.onrender.com/api/test/github-oauth
-3. **Тестовая страница**: https://beckend-yaj1.onrender.com/test-oauth.html
+1. **Статус сервера**: https://krackenx.onrender.com/api/health
+2. **OAuth конфигурация**: https://krackenx.onrender.com/api/test/github-oauth
+3. **Тестовая страница**: https://krackenx.onrender.com/test-oauth.html
 
 ## 🐛 Устранение неполадок
 

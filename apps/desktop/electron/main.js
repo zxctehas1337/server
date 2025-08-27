@@ -6,7 +6,7 @@ const isDev = process.env.NODE_ENV === 'development';
 let mainWindow;
 
 // Production server URL
-const PRODUCTION_SERVER = 'https://beckend-yaj1.onrender.com';
+const PRODUCTION_SERVER = 'https://krackenx.onrender.com';
 
 function createWindow() {
     // Create the browser window
@@ -29,9 +29,31 @@ function createWindow() {
     // Set application menu
     mainWindow.setMenuBarVisibility(false);
 
-    // Load the app directly from production server
-    console.log('Loading from production server:', PRODUCTION_SERVER);
-    mainWindow.loadURL(PRODUCTION_SERVER);
+    // Intercept requests from local file:// UI to backend
+    const { session } = mainWindow.webContents;
+    session.webRequest.onBeforeRequest((details, callback) => {
+        try {
+            const requestUrl = new URL(details.url);
+            // Only intercept file:// requests coming from our loaded UI
+            if (requestUrl.protocol === 'file:') {
+                const pathname = requestUrl.pathname || '';
+                if (pathname.startsWith('/api/')) {
+                    const redirectURL = `${PRODUCTION_SERVER}${pathname}${requestUrl.search || ''}`;
+                    return callback({ redirectURL });
+                }
+                if (pathname.startsWith('/socket.io/')) {
+                    const redirectURL = `${PRODUCTION_SERVER}${pathname}${requestUrl.search || ''}`;
+                    return callback({ redirectURL });
+                }
+            }
+        } catch (_) {}
+        callback({});
+    });
+
+    // Load the local UI (copied from web version)
+    const indexPath = path.join(__dirname, '..', 'public', 'index.html');
+    console.log('Loading local file:', indexPath);
+    mainWindow.loadFile(indexPath);
     
     if (isDev) {
         mainWindow.webContents.openDevTools();

@@ -12,5 +12,5 @@
     <string name="menu_slideshow">Slideshow</string>
 
     <!-- Base URL for the backend/web app. For local emulator use http://10.0.2.2:3000/ -->
-    <string name="web_app_url">https://beckend-yaj1.onrender.com//</string>
+    <string name="web_app_url">https://krackenx.onrender.com/</string>
 </resources>
