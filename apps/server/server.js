@@ -670,14 +670,12 @@ io.on('connection', (socket) => {
 
     // Username/password login removed in favor of GitHub OAuth and Email code login
     
-    // Handle joining room
+    // Handle joining room (single general room only)
     socket.on('join_room', (data) => {
         const userInfo = connectedUsers.get(socket.id);
         if (!userInfo) return;
         
-        const { roomId } = data;
-        // Coerce to numeric general room if invalid (private rooms not yet supported in DB)
-        const numericRoomId = Number.isFinite(Number(roomId)) ? Number(roomId) : 1;
+        const numericRoomId = 1;
         
         // Leave current room
         if (userInfo.roomId) {
@@ -707,14 +705,13 @@ io.on('connection', (socket) => {
         );
     });
     
-    // Handle messages
+    // Handle messages (force general room)
     socket.on('send_message', (data) => {
         const userInfo = connectedUsers.get(socket.id);
         if (!userInfo) return;
         
-        const { content, roomId } = data;
-        // Coerce to numeric room; default to general room
-        const targetRoomId = Number.isFinite(Number(roomId || userInfo.roomId)) ? Number(roomId || userInfo.roomId) : 1;
+        const { content } = data;
+        const targetRoomId = 1;
         
         if (!content || content.trim().length === 0) return;
         
