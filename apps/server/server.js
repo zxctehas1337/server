@@ -648,8 +648,8 @@ io.on('connection', (socket) => {
                         }
                     });
                     
-                    // Add user to general chat room
-                    db.run('INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
+                    // Add user to general chat room (idempotent)
+                    db.run('INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
                     
                     // Broadcast online users
                     broadcastOnlineUsers();
