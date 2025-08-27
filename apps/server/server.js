@@ -7,7 +7,14 @@ const path = require('path');
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: true,
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Password'],
+        credentials: true
+    }
+});
 
 // SQLite database
 const db = new sqlite3.Database(':memory:');
@@ -68,6 +75,7 @@ db.serialize(() => {
 });
 
 // Middleware
+app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
@@ -142,16 +150,22 @@ app.get('/api/auth/github/callback', async (req, res) => {
             }
         });
 
-        // Get user emails
-        const emailsResponse = await axios.get('https://api.github.com/user/emails', {
-            headers: {
-                'Authorization': `token ${access_token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+        // Get user emails (optional; may be forbidden for some tokens)
+        let emails = [];
+        try {
+            const emailsResponse = await axios.get('https://api.github.com/user/emails', {
+                headers: {
+                    'Authorization': `token ${access_token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            emails = emailsResponse.data || [];
+        } catch (e) {
+            // Continue without emails; will create user without email
+            emails = [];
+        }
 
         const userData = userResponse.data;
-        const emails = emailsResponse.data;
         const primaryEmail = emails.find(email => email.primary)?.email || emails[0]?.email;
 
         // Check if user already exists
@@ -202,7 +216,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
                             
                             // Add user to general chat room
                             db.run(
-                                'INSERT INTO chat_room_participants (room_id, user_id) VALUES (?, ?)',
+                                'INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (?, ?)',
                                 [1, this.lastID],
                                 (participantErr) => {
                                     if (participantErr) {
@@ -494,7 +508,7 @@ app.post('/api/auth/verify-email', (req, res) => {
                     
                     // Add user to general chat room
                     db.run(
-                        'INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)',
+                        'INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)',
                         [user.id]
                     );
                     
