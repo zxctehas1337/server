@@ -1,28 +1,28 @@
 /* CSS Variables for Theming */
 :root {
-  /* Light Theme */
+  /* Monochrome Light Theme */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #e2e8f0;
-  --bg-accent: #6366f1;
-  --bg-accent-hover: #5855eb;
-  --bg-success: #10b981;
-  --bg-error: #ef4444;
-  --bg-warning: #f59e0b;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #eeeeee;
+  --bg-accent: #000000;
+  --bg-accent-hover: #222222;
+  --bg-success: #000000;
+  --bg-error: #000000;
+  --bg-warning: #000000;
   
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --text-tertiary: #94a3b8;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
   --text-accent: #ffffff;
   
-  --border-primary: #e2e8f0;
-  --border-secondary: #cbd5e1;
-  --border-accent: #6366f1;
+  --border-primary: #e5e5e5;
+  --border-secondary: #cccccc;
+  --border-accent: #000000;
   
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.14), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.18), 0 8px 10px -6px rgb(0 0 0 / 0.12);
   
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -31,29 +31,29 @@
 }
 
 [data-theme="dark"] {
-  /* Dark Theme */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
+  /* True Black Dark Theme */
+  --bg-primary: #000000;
+  --bg-secondary: #000000;
+  --bg-tertiary: #0a0a0a;
   --bg-accent: #6366f1;
   --bg-accent-hover: #5855eb;
-  --bg-success: #10b981;
+  --bg-success: #22c55e;
   --bg-error: #ef4444;
   --bg-warning: #f59e0b;
   
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #64748b;
+  --text-primary: #f5f5f5;
+  --text-secondary: #cccccc;
+  --text-tertiary: #999999;
   --text-accent: #ffffff;
   
-  --border-primary: #334155;
-  --border-secondary: #475569;
+  --border-primary: #1f1f1f;
+  --border-secondary: #2a2a2a;
   --border-accent: #6366f1;
   
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.6);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.7), 0 2px 4px -2px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.75), 0 4px 6px -4px rgb(0 0 0 / 0.7);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.8), 0 8px 10px -6px rgb(0 0 0 / 0.75);
 }
 
 /* Reset and Base Styles */
@@ -77,23 +77,11 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: linear-gradient(135deg, var(--bg-accent) 0%, #8b5cf6 100%);
+  background: var(--bg-secondary);
   position: relative;
 }
 
-.app-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-  pointer-events: none;
-}
+.app-container::before { content: none; }
 
 /* Header Styles */
 .header {
@@ -101,9 +89,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   z-index: 100;
 }
 
@@ -136,29 +124,17 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.header-logo {
+  height: 80px;
+  width: auto;
+  margin-right: 15px;
+}
+
 .user-info {
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.875rem;
   font-weight: 500;
 }
-
-.theme-toggle {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: var(--radius-lg);
-  padding: 0.5rem;
-  color: white;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(10px);
-}
-
-.theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
 /* Auth Container */
 .login-container {
   flex: 1;
@@ -797,7 +773,7 @@ body {
 }
 
 .message.other {
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
   color: var(--text-primary);
   align-self: flex-start;
   border-bottom-left-radius: var(--radius-md);
@@ -942,17 +918,12 @@ body {
   transform: translateX(0);
 }
 
-.status-message.error {
-  background: var(--bg-error);
-}
-
-.status-message.success {
-  background: var(--bg-success);
-}
-
-.status-message.info {
-  background: var(--bg-accent);
-}
+/* High-contrast status toasts for both themes */
+[data-theme="light"] .status-message { background: #000000; color: #ffffff; }
+[data-theme="dark"] .status-message { background: #ffffff; color: #000000; }
+.status-message.error { opacity: 0.95; }
+.status-message.success { opacity: 0.95; }
+.status-message.info { opacity: 0.95; }
 
 /* Scrollbar Styling */
 .messages-container::-webkit-scrollbar,

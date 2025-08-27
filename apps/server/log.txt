@@ -1,0 +1,811 @@
+2025-08-27T07:50:00.24909729Z ==> Cloning from https://github.com/dildjakaa/beckend
+2025-08-27T07:50:00.798631501Z ==> Checking out commit b3f71dee16ea78044893b19756a5310556ede76f in branch main
+2025-08-27T07:50:02.320692507Z ==> Requesting Node.js version >=16.0.0
+2025-08-27T07:50:02.607828232Z ==> Using Node.js version 24.6.0 via /opt/render/project/src/package.json
+2025-08-27T07:50:02.634204887Z ==> Docs on specifying a Node.js version: https://render.com/docs/node-version
+2025-08-27T07:50:04.588479671Z ==> Running build command 'npm install'...
+2025-08-27T07:50:14.278656822Z 
+2025-08-27T07:50:14.278679754Z added 621 packages, and audited 629 packages in 10s
+2025-08-27T07:50:14.2787827Z 
+2025-08-27T07:50:14.278793991Z 89 packages are looking for funding
+2025-08-27T07:50:14.278809561Z   run `npm fund` for details
+2025-08-27T07:50:14.279838773Z 
+2025-08-27T07:50:14.279855414Z found 0 vulnerabilities
+2025-08-27T07:50:20.458866944Z ==> Uploading build...
+2025-08-27T07:50:30.99187617Z ==> Uploaded in 8.0s. Compression took 2.5s
+2025-08-27T07:50:31.06953312Z ==> Build successful 🎉
+2025-08-27T07:50:39.203371699Z ==> Deploying...
+2025-08-27T07:51:02.898212933Z ==> Running 'node apps/server/server.js'
+2025-08-27T07:51:03.191512025Z [dotenv@17.2.1] injecting env (10) from apps/server/.env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+2025-08-27T07:51:04.191531236Z Server running on port 5432
+2025-08-27T07:51:04.191557756Z Visit http://localhost:5432 to access the messenger
+2025-08-27T07:51:10.020217805Z ==> Your service is live 🎉
+2025-08-27T07:51:10.049022634Z ==> 
+2025-08-27T07:51:10.077956214Z ==> ///////////////////////////////////////////////////////////
+2025-08-27T07:51:10.104241944Z ==> 
+2025-08-27T07:51:10.132740603Z ==> Available at your primary URL https://beckend-yaj1.onrender.com
+2025-08-27T07:51:10.164494173Z ==> 
+2025-08-27T07:51:10.195112233Z ==> ///////////////////////////////////////////////////////////
+2025-08-27T07:51:18.470729797Z User connected: lEkoTY3PB58FPWG1AAAB
+2025-08-27T07:55:35.767715528Z GitHub OAuth error: AxiosError: Request failed with status code 403
+2025-08-27T07:55:35.767738938Z     at settle (/opt/render/project/src/node_modules/axios/dist/node/axios.cjs:2090:12)
+2025-08-27T07:55:35.767743998Z     at Unzip.handleStreamEnd (/opt/render/project/src/node_modules/axios/dist/node/axios.cjs:3207:11)
+2025-08-27T07:55:35.767748828Z     at Unzip.emit (node:events:520:35)
+2025-08-27T07:55:35.767752919Z     at endReadableNT (node:internal/streams/readable:1701:12)
+2025-08-27T07:55:35.767756379Z     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+2025-08-27T07:55:35.767759889Z     at Axios.request (/opt/render/project/src/node_modules/axios/dist/node/axios.cjs:4317:41)
+2025-08-27T07:55:35.767763379Z     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-08-27T07:55:35.767766789Z     at async /opt/render/project/src/apps/server/server.js:146:32 {
+2025-08-27T07:55:35.767770809Z   code: 'ERR_BAD_REQUEST',
+2025-08-27T07:55:35.767774269Z   config: {
+2025-08-27T07:55:35.767777899Z     transitional: {
+2025-08-27T07:55:35.767781269Z       silentJSONParsing: true,
+2025-08-27T07:55:35.767784619Z       forcedJSONParsing: true,
+2025-08-27T07:55:35.767788049Z       clarifyTimeoutError: false
+2025-08-27T07:55:35.767791459Z     },
+2025-08-27T07:55:35.767794909Z     adapter: [ 'xhr', 'http', 'fetch' ],
+2025-08-27T07:55:35.767799899Z     transformRequest: [ [Function: transformRequest] ],
+2025-08-27T07:55:35.767805679Z     transformResponse: [ [Function: transformResponse] ],
+2025-08-27T07:55:35.76781094Z     timeout: 0,
+2025-08-27T07:55:35.767816369Z     xsrfCookieName: 'XSRF-TOKEN',
+2025-08-27T07:55:35.76782139Z     xsrfHeaderName: 'X-XSRF-TOKEN',
+2025-08-27T07:55:35.76782722Z     maxContentLength: -1,
+2025-08-27T07:55:35.76783129Z     maxBodyLength: -1,
+2025-08-27T07:55:35.76783474Z     env: { FormData: [Function [FormData]], Blob: [class Blob] },
+2025-08-27T07:55:35.7678381Z     validateStatus: [Function: validateStatus],
+2025-08-27T07:55:35.76784152Z     headers: Object [AxiosHeaders] {
+2025-08-27T07:55:35.76784484Z       Accept: 'application/vnd.github.v3+json',
+2025-08-27T07:55:35.76784819Z       'Content-Type': undefined,
+2025-08-27T07:55:35.76785156Z       Authorization: 'token ghu_g8w4lRfit5GnAFYwWiRpb3IEnQFVJJ1aBqSQ',
+2025-08-27T07:55:35.76785497Z       'User-Agent': 'axios/1.11.0',
+2025-08-27T07:55:35.7678583Z       'Accept-Encoding': 'gzip, compress, deflate, br'
+2025-08-27T07:55:35.76786165Z     },
+2025-08-27T07:55:35.76786499Z     method: 'get',
+2025-08-27T07:55:35.76786843Z     url: 'https://api.github.com/user/emails',
+2025-08-27T07:55:35.767871781Z     allowAbsoluteUrls: true,
+2025-08-27T07:55:35.76787513Z     data: undefined
+2025-08-27T07:55:35.767878531Z   },
+2025-08-27T07:55:35.767881961Z   request: <ref *1> ClientRequest {
+2025-08-27T07:55:35.767885321Z     _events: [Object: null prototype] {
+2025-08-27T07:55:35.767888651Z       abort: [Function (anonymous)],
+2025-08-27T07:55:35.767891981Z       aborted: [Function (anonymous)],
+2025-08-27T07:55:35.767895341Z       connect: [Function (anonymous)],
+2025-08-27T07:55:35.767898661Z       error: [Function (anonymous)],
+2025-08-27T07:55:35.767912191Z       socket: [Function (anonymous)],
+2025-08-27T07:55:35.767914501Z       timeout: [Function (anonymous)],
+2025-08-27T07:55:35.767916551Z       finish: [Function: requestOnFinish]
+2025-08-27T07:55:35.767918581Z     },
+2025-08-27T07:55:35.767920851Z     _eventsCount: 7,
+2025-08-27T07:55:35.767922961Z     _maxListeners: undefined,
+2025-08-27T07:55:35.767925071Z     outputData: [],
+2025-08-27T07:55:35.767927121Z     outputSize: 0,
+2025-08-27T07:55:35.767929151Z     writable: true,
+2025-08-27T07:55:35.767931151Z     destroyed: true,
+2025-08-27T07:55:35.767933142Z     _last: true,
+2025-08-27T07:55:35.767935431Z     chunkedEncoding: false,
+2025-08-27T07:55:35.767937562Z     shouldKeepAlive: true,
+2025-08-27T07:55:35.767939622Z     maxRequestsOnConnectionReached: false,
+2025-08-27T07:55:35.767941732Z     _defaultKeepAlive: true,
+2025-08-27T07:55:35.767943792Z     useChunkedEncodingByDefault: false,
+2025-08-27T07:55:35.767945842Z     sendDate: false,
+2025-08-27T07:55:35.767947902Z     _removedConnection: false,
+2025-08-27T07:55:35.767949942Z     _removedContLen: false,
+2025-08-27T07:55:35.767951972Z     _removedTE: false,
+2025-08-27T07:55:35.767953972Z     strictContentLength: false,
+2025-08-27T07:55:35.767955982Z     _contentLength: 0,
+2025-08-27T07:55:35.767958042Z     _hasBody: true,
+2025-08-27T07:55:35.767960072Z     _trailer: '',
+2025-08-27T07:55:35.767962062Z     finished: true,
+2025-08-27T07:55:35.767964352Z     _headerSent: true,
+2025-08-27T07:55:35.767966402Z     _closed: true,
+2025-08-27T07:55:35.767968452Z     _header: 'GET /user/emails HTTP/1.1\r\n' +
+2025-08-27T07:55:35.767970582Z       'Accept: application/vnd.github.v3+json\r\n' +
+2025-08-27T07:55:35.767972722Z       'Authorization: token ghu_g8w4lRfit5GnAFYwWiRpb3IEnQFVJJ1aBqSQ\r\n' +
+2025-08-27T07:55:35.767974812Z       'User-Agent: axios/1.11.0\r\n' +
+2025-08-27T07:55:35.767976842Z       'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+2025-08-27T07:55:35.767978862Z       'Host: api.github.com\r\n' +
+2025-08-27T07:55:35.767980882Z       'Connection: keep-alive\r\n' +
+2025-08-27T07:55:35.767982942Z       '\r\n',
+2025-08-27T07:55:35.767985012Z     _keepAliveTimeout: 0,
+2025-08-27T07:55:35.767987032Z     _onPendingData: [Function: nop],
+2025-08-27T07:55:35.767989072Z     agent: Agent {
+2025-08-27T07:55:35.767991172Z       _events: [Object: null prototype],
+2025-08-27T07:55:35.767993212Z       _eventsCount: 2,
+2025-08-27T07:55:35.767995243Z       _maxListeners: undefined,
+2025-08-27T07:55:35.767997283Z       options: [Object: null prototype],
+2025-08-27T07:55:35.767999313Z       defaultPort: 443,
+2025-08-27T07:55:35.768001373Z       protocol: 'https:',
+2025-08-27T07:55:35.768005843Z       requests: [Object: null prototype] {},
+2025-08-27T07:55:35.768009373Z       sockets: [Object: null prototype] {},
+2025-08-27T07:55:35.768011563Z       freeSockets: [Object: null prototype],
+2025-08-27T07:55:35.768013633Z       keepAliveMsecs: 1000,
+2025-08-27T07:55:35.768015703Z       keepAlive: true,
+2025-08-27T07:55:35.768017803Z       maxSockets: Infinity,
+2025-08-27T07:55:35.768019843Z       maxFreeSockets: 256,
+2025-08-27T07:55:35.768021893Z       scheduling: 'lifo',
+2025-08-27T07:55:35.768023923Z       maxTotalSockets: Infinity,
+2025-08-27T07:55:35.768025953Z       totalSocketCount: 2,
+2025-08-27T07:55:35.768027993Z       maxCachedSessions: 100,
+2025-08-27T07:55:35.768030003Z       _sessionCache: [Object],
+2025-08-27T07:55:35.768032013Z       Symbol(shapeMode): false,
+2025-08-27T07:55:35.768034003Z       Symbol(kCapture): false
+2025-08-27T07:55:35.768041163Z     },
+2025-08-27T07:55:35.768043363Z     socketPath: undefined,
+2025-08-27T07:55:35.768045403Z     method: 'GET',
+2025-08-27T07:55:35.768047483Z     maxHeaderSize: undefined,
+2025-08-27T07:55:35.768049813Z     insecureHTTPParser: undefined,
+2025-08-27T07:55:35.768051864Z     joinDuplicateHeaders: undefined,
+2025-08-27T07:55:35.768053893Z     path: '/user/emails',
+2025-08-27T07:55:35.768056044Z     _ended: true,
+2025-08-27T07:55:35.768057904Z     res: IncomingMessage {
+2025-08-27T07:55:35.768059514Z       _events: [Object],
+2025-08-27T07:55:35.768061134Z       _readableState: [ReadableState],
+2025-08-27T07:55:35.768062794Z       _maxListeners: undefined,
+2025-08-27T07:55:35.768064444Z       socket: null,
+2025-08-27T07:55:35.768066074Z       httpVersionMajor: 1,
+2025-08-27T07:55:35.768067664Z       httpVersionMinor: 1,
+2025-08-27T07:55:35.768069254Z       httpVersion: '1.1',
+2025-08-27T07:55:35.768079994Z       complete: true,
+2025-08-27T07:55:35.768081964Z       rawHeaders: [Array],
+2025-08-27T07:55:35.768083594Z       rawTrailers: [],
+2025-08-27T07:55:35.768085344Z       joinDuplicateHeaders: undefined,
+2025-08-27T07:55:35.768087014Z       aborted: false,
+2025-08-27T07:55:35.768088624Z       upgrade: false,
+2025-08-27T07:55:35.768090274Z       url: '',
+2025-08-27T07:55:35.768091974Z       method: null,
+2025-08-27T07:55:35.768093574Z       statusCode: 403,
+2025-08-27T07:55:35.768095234Z       statusMessage: 'Forbidden',
+2025-08-27T07:55:35.768096874Z       client: [TLSSocket],
+2025-08-27T07:55:35.768098564Z       _consuming: true,
+2025-08-27T07:55:35.768100184Z       _dumped: false,
+2025-08-27T07:55:35.768101854Z       req: [Circular *1],
+2025-08-27T07:55:35.768103564Z       _eventsCount: 4,
+2025-08-27T07:55:35.768105354Z       responseUrl: 'https://api.github.com/user/emails',
+2025-08-27T07:55:35.768107094Z       redirects: [],
+2025-08-27T07:55:35.768108785Z       Symbol(shapeMode): true,
+2025-08-27T07:55:35.768110445Z       Symbol(kCapture): false,
+2025-08-27T07:55:35.768112145Z       Symbol(kHeaders): [Object],
+2025-08-27T07:55:35.768113814Z       Symbol(kHeadersCount): 54,
+2025-08-27T07:55:35.768115465Z       Symbol(kTrailers): null,
+2025-08-27T07:55:35.768117134Z       Symbol(kTrailersCount): 0
+2025-08-27T07:55:35.768118785Z     },
+2025-08-27T07:55:35.768120465Z     aborted: false,
+2025-08-27T07:55:35.768122505Z     timeoutCb: null,
+2025-08-27T07:55:35.768125395Z     upgradeOrConnect: false,
+2025-08-27T07:55:35.768128385Z     parser: null,
+2025-08-27T07:55:35.768130705Z     maxHeadersCount: null,
+2025-08-27T07:55:35.768133355Z     reusedSocket: true,
+2025-08-27T07:55:35.768135855Z     host: 'api.github.com',
+2025-08-27T07:55:35.768138385Z     protocol: 'https:',
+2025-08-27T07:55:35.768140725Z     _redirectable: Writable {
+2025-08-27T07:55:35.768143285Z       _events: [Object],
+2025-08-27T07:55:35.768145385Z       _writableState: [WritableState],
+2025-08-27T07:55:35.768147755Z       _maxListeners: undefined,
+2025-08-27T07:55:35.768149975Z       _options: [Object],
+2025-08-27T07:55:35.768152115Z       _ended: true,
+2025-08-27T07:55:35.768154315Z       _ending: true,
+2025-08-27T07:55:35.768156795Z       _redirectCount: 0,
+2025-08-27T07:55:35.768159545Z       _redirects: [],
+2025-08-27T07:55:35.768162155Z       _requestBodyLength: 0,
+2025-08-27T07:55:35.768164575Z       _requestBodyBuffers: [],
+2025-08-27T07:55:35.768167005Z       _eventsCount: 3,
+2025-08-27T07:55:35.768169366Z       _onNativeResponse: [Function (anonymous)],
+2025-08-27T07:55:35.768175906Z       _currentRequest: [Circular *1],
+2025-08-27T07:55:35.768178295Z       _currentUrl: 'https://api.github.com/user/emails',
+2025-08-27T07:55:35.768180626Z       Symbol(shapeMode): true,
+2025-08-27T07:55:35.768182746Z       Symbol(kCapture): false
+2025-08-27T07:55:35.768185306Z     },
+2025-08-27T07:55:35.768187856Z     Symbol(shapeMode): false,
+2025-08-27T07:55:35.768190356Z     Symbol(kCapture): false,
+2025-08-27T07:55:35.768192766Z     Symbol(kBytesWritten): 0,
+2025-08-27T07:55:35.768195046Z     Symbol(kNeedDrain): false,
+2025-08-27T07:55:35.768197356Z     Symbol(corked): 0,
+2025-08-27T07:55:35.768199616Z     Symbol(kChunkedBuffer): [],
+2025-08-27T07:55:35.768202056Z     Symbol(kChunkedLength): 0,
+2025-08-27T07:55:35.768204676Z     Symbol(kSocket): TLSSocket {
+2025-08-27T07:55:35.768207546Z       _tlsOptions: [Object],
+2025-08-27T07:55:35.768210156Z       _secureEstablished: true,
+2025-08-27T07:55:35.768212496Z       _securePending: false,
+2025-08-27T07:55:35.768214766Z       _newSessionPending: false,
+2025-08-27T07:55:35.768217176Z       _controlReleased: true,
+2025-08-27T07:55:35.768219526Z       secureConnecting: false,
+2025-08-27T07:55:35.768221886Z       _SNICallback: null,
+2025-08-27T07:55:35.768224366Z       servername: 'api.github.com',
+2025-08-27T07:55:35.768226616Z       alpnProtocol: false,
+2025-08-27T07:55:35.768228956Z       authorized: true,
+2025-08-27T07:55:35.768231216Z       authorizationError: null,
+2025-08-27T07:55:35.768233427Z       encrypted: true,
+2025-08-27T07:55:35.768235747Z       _events: [Object: null prototype],
+2025-08-27T07:55:35.768238287Z       _eventsCount: 9,
+2025-08-27T07:55:35.768240947Z       connecting: false,
+2025-08-27T07:55:35.768243407Z       _hadError: false,
+2025-08-27T07:55:35.768245807Z       _parent: null,
+2025-08-27T07:55:35.768248457Z       _host: 'api.github.com',
+2025-08-27T07:55:35.768251217Z       _closeAfterHandlingError: false,
+2025-08-27T07:55:35.768253507Z       _readableState: [ReadableState],
+2025-08-27T07:55:35.768256067Z       _writableState: [WritableState],
+2025-08-27T07:55:35.768258557Z       allowHalfOpen: false,
+2025-08-27T07:55:35.768261017Z       _maxListeners: undefined,
+2025-08-27T07:55:35.768263247Z       _sockname: null,
+2025-08-27T07:55:35.768265577Z       _pendingData: null,
+2025-08-27T07:55:35.768267937Z       _pendingEncoding: '',
+2025-08-27T07:55:35.768270397Z       server: undefined,
+2025-08-27T07:55:35.768272947Z       _server: null,
+2025-08-27T07:55:35.768275257Z       ssl: [TLSWrap],
+2025-08-27T07:55:35.768277447Z       _requestCert: true,
+2025-08-27T07:55:35.768279817Z       _rejectUnauthorized: true,
+2025-08-27T07:55:35.768282017Z       timeout: 5000,
+2025-08-27T07:55:35.768284157Z       parser: null,
+2025-08-27T07:55:35.768286457Z       _httpMessage: null,
+2025-08-27T07:55:35.768288837Z       Symbol(alpncallback): null,
+2025-08-27T07:55:35.768291288Z       Symbol(res): [TLSWrap],
+2025-08-27T07:55:35.768293768Z       Symbol(verified): true,
+2025-08-27T07:55:35.768296317Z       Symbol(pendingSession): null,
+2025-08-27T07:55:35.768299088Z       Symbol(async_id_symbol): -1,
+2025-08-27T07:55:35.768301518Z       Symbol(kHandle): [TLSWrap],
+2025-08-27T07:55:35.768303918Z       Symbol(lastWriteQueueSize): 0,
+2025-08-27T07:55:35.768306258Z       Symbol(timeout): Timeout {
+2025-08-27T07:55:35.768308728Z         _idleTimeout: 5000,
+2025-08-27T07:55:35.768311188Z         _idlePrev: [TimersList],
+2025-08-27T07:55:35.768313668Z         _idleNext: [Timeout],
+2025-08-27T07:55:35.768315908Z         _idleStart: 272760,
+2025-08-27T07:55:35.768323318Z         _onTimeout: [Function: bound ],
+2025-08-27T07:55:35.768326078Z         _timerArgs: undefined,
+2025-08-27T07:55:35.768328518Z         _repeat: null,
+2025-08-27T07:55:35.768331228Z         _destroyed: false,
+2025-08-27T07:55:35.768333528Z         Symbol(refed): false,
+2025-08-27T07:55:35.768336108Z         Symbol(kHasPrimitive): false,
+2025-08-27T07:55:35.768338428Z         Symbol(asyncId): 827,
+2025-08-27T07:55:35.768340748Z         Symbol(triggerId): 825,
+2025-08-27T07:55:35.768343118Z         Symbol(kAsyncContextFrame): undefined
+2025-08-27T07:55:35.768345878Z       },
+2025-08-27T07:55:35.768348378Z       Symbol(kBuffer): null,
+2025-08-27T07:55:35.768350918Z       Symbol(kBufferCb): null,
+2025-08-27T07:55:35.768353638Z       Symbol(kBufferGen): null,
+2025-08-27T07:55:35.768356289Z       Symbol(shapeMode): true,
+2025-08-27T07:55:35.768358578Z       Symbol(kCapture): false,
+2025-08-27T07:55:35.768360849Z       Symbol(kSetNoDelay): false,
+2025-08-27T07:55:35.768363319Z       Symbol(kSetKeepAlive): true,
+2025-08-27T07:55:35.768366069Z       Symbol(kSetKeepAliveInitialDelay): 1,
+2025-08-27T07:55:35.768368889Z       Symbol(kBytesRead): 0,
+2025-08-27T07:55:35.768371529Z       Symbol(kBytesWritten): 0,
+2025-08-27T07:55:35.768374029Z       Symbol(connect-options): [Object]
+2025-08-27T07:55:35.768376769Z     },
+2025-08-27T07:55:35.768379529Z     Symbol(kOutHeaders): [Object: null prototype] {
+2025-08-27T07:55:35.768384599Z       accept: [Array],
+2025-08-27T07:55:35.768387969Z       authorization: [Array],
+2025-08-27T07:55:35.768390309Z       'user-agent': [Array],
+2025-08-27T07:55:35.768391969Z       'accept-encoding': [Array],
+2025-08-27T07:55:35.768393739Z       host: [Array]
+2025-08-27T07:55:35.768395459Z     },
+2025-08-27T07:55:35.768397149Z     Symbol(errored): null,
+2025-08-27T07:55:35.768398849Z     Symbol(kHighWaterMark): 65536,
+2025-08-27T07:55:35.768400529Z     Symbol(kRejectNonStandardBodyWrites): false,
+2025-08-27T07:55:35.768402219Z     Symbol(kUniqueHeaders): null
+2025-08-27T07:55:35.768403879Z   },
+2025-08-27T07:55:35.768405619Z   response: {
+2025-08-27T07:55:35.768407329Z     status: 403,
+2025-08-27T07:55:35.768408969Z     statusText: 'Forbidden',
+2025-08-27T07:55:35.76841065Z     headers: Object [AxiosHeaders] {
+2025-08-27T07:55:35.768419579Z       date: 'Wed, 27 Aug 2025 07:55:35 GMT',
+2025-08-27T07:55:35.7684214Z       'content-type': 'application/json; charset=utf-8',
+2025-08-27T07:55:35.7684231Z       'x-oauth-scopes': '',
+2025-08-27T07:55:35.7684248Z       'x-accepted-oauth-scopes': 'user, user:email',
+2025-08-27T07:55:35.76842656Z       'x-oauth-client-id': 'Iv23li0PJA4SqDdne40M',
+2025-08-27T07:55:35.76842887Z       'github-authentication-token-expiration': '2025-08-27 15:55:35 UTC',
+2025-08-27T07:55:35.7684306Z       'x-github-media-type': 'github.v3; format=json',
+2025-08-27T07:55:35.76843223Z       'x-accepted-github-permissions': 'emails=read',
+2025-08-27T07:55:35.76843398Z       'x-github-api-version-selected': '2022-11-28',
+2025-08-27T07:55:35.76843563Z       'x-ratelimit-limit': '5000',
+2025-08-27T07:55:35.76843723Z       'x-ratelimit-remaining': '4990',
+2025-08-27T07:55:35.76843883Z       'x-ratelimit-reset': '1756282348',
+2025-08-27T07:55:35.76844048Z       'x-ratelimit-used': '10',
+2025-08-27T07:55:35.76844226Z       'x-ratelimit-resource': 'core',
+2025-08-27T07:55:35.76844591Z       'access-control-expose-headers': 'ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset',
+2025-08-27T07:55:35.76845384Z       'access-control-allow-origin': '*',
+2025-08-27T07:55:35.76845582Z       'strict-transport-security': 'max-age=31536000; includeSubdomains; preload',
+2025-08-27T07:55:35.76845755Z       'x-frame-options': 'deny',
+2025-08-27T07:55:35.76845921Z       'x-content-type-options': 'nosniff',
+2025-08-27T07:55:35.76846084Z       'x-xss-protection': '0',
+2025-08-27T07:55:35.76846261Z       'referrer-policy': 'origin-when-cross-origin, strict-origin-when-cross-origin',
+2025-08-27T07:55:35.76846423Z       'content-security-policy': "default-src 'none'",
+2025-08-27T07:55:35.76846586Z       vary: 'Accept-Encoding, Accept, X-Requested-With',
+2025-08-27T07:55:35.76846747Z       'transfer-encoding': 'chunked',
+2025-08-27T07:55:35.7684691Z       server: 'github.com',
+2025-08-27T07:55:35.7684709Z       'x-github-request-id': '6F55:1774B5:3F3B3B:4102F9:68AEB9F7'
+2025-08-27T07:55:35.76847256Z     },
+2025-08-27T07:55:35.76847426Z     config: {
+2025-08-27T07:55:35.768475951Z       transitional: [Object],
+2025-08-27T07:55:35.76847762Z       adapter: [Array],
+2025-08-27T07:55:35.76847942Z       transformRequest: [Array],
+2025-08-27T07:55:35.768481151Z       transformResponse: [Array],
+2025-08-27T07:55:35.768482801Z       timeout: 0,
+2025-08-27T07:55:35.768484431Z       xsrfCookieName: 'XSRF-TOKEN',
+2025-08-27T07:55:35.768486151Z       xsrfHeaderName: 'X-XSRF-TOKEN',
+2025-08-27T07:55:35.768487791Z       maxContentLength: -1,
+2025-08-27T07:55:35.768489441Z       maxBodyLength: -1,
+2025-08-27T07:55:35.768491091Z       env: [Object],
+2025-08-27T07:55:35.768492751Z       validateStatus: [Function: validateStatus],
+2025-08-27T07:55:35.768494391Z       headers: [Object [AxiosHeaders]],
+2025-08-27T07:55:35.768496111Z       method: 'get',
+2025-08-27T07:55:35.768497731Z       url: 'https://api.github.com/user/emails',
+2025-08-27T07:55:35.768499351Z       allowAbsoluteUrls: true,
+2025-08-27T07:55:35.768501011Z       data: undefined
+2025-08-27T07:55:35.768502701Z     },
+2025-08-27T07:55:35.768504331Z     request: <ref *1> ClientRequest {
+2025-08-27T07:55:35.768505981Z       _events: [Object: null prototype],
+2025-08-27T07:55:35.768507641Z       _eventsCount: 7,
+2025-08-27T07:55:35.768509281Z       _maxListeners: undefined,
+2025-08-27T07:55:35.768510941Z       outputData: [],
+2025-08-27T07:55:35.768512591Z       outputSize: 0,
+2025-08-27T07:55:35.768514231Z       writable: true,
+2025-08-27T07:55:35.768515911Z       destroyed: true,
+2025-08-27T07:55:35.768517531Z       _last: true,
+2025-08-27T07:55:35.768519181Z       chunkedEncoding: false,
+2025-08-27T07:55:35.768520811Z       shouldKeepAlive: true,
+2025-08-27T07:55:35.768522441Z       maxRequestsOnConnectionReached: false,
+2025-08-27T07:55:35.768524131Z       _defaultKeepAlive: true,
+2025-08-27T07:55:35.768525801Z       useChunkedEncodingByDefault: false,
+2025-08-27T07:55:35.768527451Z       sendDate: false,
+2025-08-27T07:55:35.768529151Z       _removedConnection: false,
+2025-08-27T07:55:35.768530761Z       _removedContLen: false,
+2025-08-27T07:55:35.768532392Z       _removedTE: false,
+2025-08-27T07:55:35.768534032Z       strictContentLength: false,
+2025-08-27T07:55:35.768535672Z       _contentLength: 0,
+2025-08-27T07:55:35.768537292Z       _hasBody: true,
+2025-08-27T07:55:35.768538932Z       _trailer: '',
+2025-08-27T07:55:35.768553702Z       finished: true,
+2025-08-27T07:55:35.768556042Z       _headerSent: true,
+2025-08-27T07:55:35.768557702Z       _closed: true,
+2025-08-27T07:55:35.768565912Z       _header: 'GET /user/emails HTTP/1.1\r\n' +
+2025-08-27T07:55:35.768567642Z         'Accept: application/vnd.github.v3+json\r\n' +
+2025-08-27T07:55:35.768569362Z         'Authorization: token ghu_g8w4lRfit5GnAFYwWiRpb3IEnQFVJJ1aBqSQ\r\n' +
+2025-08-27T07:55:35.768571002Z         'User-Agent: axios/1.11.0\r\n' +
+2025-08-27T07:55:35.768572632Z         'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+2025-08-27T07:55:35.768574242Z         'Host: api.github.com\r\n' +
+2025-08-27T07:55:35.768575942Z         'Connection: keep-alive\r\n' +
+2025-08-27T07:55:35.768579422Z         '\r\n',
+2025-08-27T07:55:35.768581172Z       _keepAliveTimeout: 0,
+2025-08-27T07:55:35.768582822Z       _onPendingData: [Function: nop],
+2025-08-27T07:55:35.768585352Z       agent: [Agent],
+2025-08-27T07:55:35.768587122Z       socketPath: undefined,
+2025-08-27T07:55:35.768588742Z       method: 'GET',
+2025-08-27T07:55:35.768590362Z       maxHeaderSize: undefined,
+2025-08-27T07:55:35.768592422Z       insecureHTTPParser: undefined,
+2025-08-27T07:55:35.768594133Z       joinDuplicateHeaders: undefined,
+2025-08-27T07:55:35.768595753Z       path: '/user/emails',
+2025-08-27T07:55:35.768597362Z       _ended: true,
+2025-08-27T07:55:35.768598982Z       res: [IncomingMessage],
+2025-08-27T07:55:35.768600582Z       aborted: false,
+2025-08-27T07:55:35.768602293Z       timeoutCb: null,
+2025-08-27T07:55:35.768603903Z       upgradeOrConnect: false,
+2025-08-27T07:55:35.768605543Z       parser: null,
+2025-08-27T07:55:35.768607163Z       maxHeadersCount: null,
+2025-08-27T07:55:35.768608773Z       reusedSocket: true,
+2025-08-27T07:55:35.768610423Z       host: 'api.github.com',
+2025-08-27T07:55:35.768612043Z       protocol: 'https:',
+2025-08-27T07:55:35.768614403Z       _redirectable: [Writable],
+2025-08-27T07:55:35.768617143Z       Symbol(shapeMode): false,
+2025-08-27T07:55:35.768620333Z       Symbol(kCapture): false,
+2025-08-27T07:55:35.768623333Z       Symbol(kBytesWritten): 0,
+2025-08-27T07:55:35.768626013Z       Symbol(kNeedDrain): false,
+2025-08-27T07:55:35.768628473Z       Symbol(corked): 0,
+2025-08-27T07:55:35.768630873Z       Symbol(kChunkedBuffer): [],
+2025-08-27T07:55:35.768633293Z       Symbol(kChunkedLength): 0,
+2025-08-27T07:55:35.768635833Z       Symbol(kSocket): [TLSSocket],
+2025-08-27T07:55:35.768638463Z       Symbol(kOutHeaders): [Object: null prototype],
+2025-08-27T07:55:35.768640983Z       Symbol(errored): null,
+2025-08-27T07:55:35.768643543Z       Symbol(kHighWaterMark): 65536,
+2025-08-27T07:55:35.768658974Z       Symbol(kRejectNonStandardBodyWrites): false,
+2025-08-27T07:55:35.768662034Z       Symbol(kUniqueHeaders): null
+2025-08-27T07:55:35.768664704Z     },
+2025-08-27T07:55:35.768667544Z     data: {
+2025-08-27T07:55:35.768670334Z       message: 'Resource not accessible by integration',
+2025-08-27T07:55:35.768673794Z       documentation_url: 'https://docs.github.com/rest/users/emails#list-email-addresses-for-the-authenticated-user',
+2025-08-27T07:55:35.768705594Z       status: '403'
+2025-08-27T07:55:35.768713944Z     }
+2025-08-27T07:55:35.768716864Z   },
+2025-08-27T07:55:35.768719895Z   status: 403
+2025-08-27T07:55:35.768721965Z }
+2025-08-27T07:55:37.916203407Z User connected: gv-fHmTc6RxovvrJAAAD
+2025-08-27T07:55:44.717384798Z GitHub OAuth error: AxiosError: Request failed with status code 403
+2025-08-27T07:55:44.717416849Z     at settle (/opt/render/project/src/node_modules/axios/dist/node/axios.cjs:2090:12)
+2025-08-27T07:55:44.717425389Z     at Unzip.handleStreamEnd (/opt/render/project/src/node_modules/axios/dist/node/axios.cjs:3207:11)
+2025-08-27T07:55:44.71744731Z     at Unzip.emit (node:events:520:35)
+2025-08-27T07:55:44.71745123Z     at endReadableNT (node:internal/streams/readable:1701:12)
+2025-08-27T07:55:44.71745392Z     at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+2025-08-27T07:55:44.71745688Z     at Axios.request (/opt/render/project/src/node_modules/axios/dist/node/axios.cjs:4317:41)
+2025-08-27T07:55:44.71745947Z     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2025-08-27T07:55:44.71746211Z     at async /opt/render/project/src/apps/server/server.js:146:32 {
+2025-08-27T07:55:44.71746555Z   code: 'ERR_BAD_REQUEST',
+2025-08-27T07:55:44.71746834Z   config: {
+2025-08-27T07:55:44.71747147Z     transitional: {
+2025-08-27T07:55:44.71747403Z       silentJSONParsing: true,
+2025-08-27T07:55:44.71747649Z       forcedJSONParsing: true,
+2025-08-27T07:55:44.71747915Z       clarifyTimeoutError: false
+2025-08-27T07:55:44.71748174Z     },
+2025-08-27T07:55:44.71748464Z     adapter: [ 'xhr', 'http', 'fetch' ],
+2025-08-27T07:55:44.71748676Z     transformRequest: [ [Function: transformRequest] ],
+2025-08-27T07:55:44.71748897Z     transformResponse: [ [Function: transformResponse] ],
+2025-08-27T07:55:44.71749099Z     timeout: 0,
+2025-08-27T07:55:44.71749314Z     xsrfCookieName: 'XSRF-TOKEN',
+2025-08-27T07:55:44.71749542Z     xsrfHeaderName: 'X-XSRF-TOKEN',
+2025-08-27T07:55:44.71749759Z     maxContentLength: -1,
+2025-08-27T07:55:44.71749968Z     maxBodyLength: -1,
+2025-08-27T07:55:44.717501871Z     env: { FormData: [Function [FormData]], Blob: [class Blob] },
+2025-08-27T07:55:44.7175042Z     validateStatus: [Function: validateStatus],
+2025-08-27T07:55:44.7175067Z     headers: Object [AxiosHeaders] {
+2025-08-27T07:55:44.717509271Z       Accept: 'application/vnd.github.v3+json',
+2025-08-27T07:55:44.717512041Z       'Content-Type': undefined,
+2025-08-27T07:55:44.717514861Z       Authorization: 'token ghu_SOL5MSHtGNtLhlFcNgWdbHziHKwcj81zbrtU',
+2025-08-27T07:55:44.717517381Z       'User-Agent': 'axios/1.11.0',
+2025-08-27T07:55:44.717519951Z       'Accept-Encoding': 'gzip, compress, deflate, br'
+2025-08-27T07:55:44.717522471Z     },
+2025-08-27T07:55:44.717525191Z     method: 'get',
+2025-08-27T07:55:44.717527671Z     url: 'https://api.github.com/user/emails',
+2025-08-27T07:55:44.717529761Z     allowAbsoluteUrls: true,
+2025-08-27T07:55:44.717532261Z     data: undefined
+2025-08-27T07:55:44.717535051Z   },
+2025-08-27T07:55:44.717537731Z   request: <ref *1> ClientRequest {
+2025-08-27T07:55:44.717540591Z     _events: [Object: null prototype] {
+2025-08-27T07:55:44.717543161Z       abort: [Function (anonymous)],
+2025-08-27T07:55:44.717545931Z       aborted: [Function (anonymous)],
+2025-08-27T07:55:44.717548611Z       connect: [Function (anonymous)],
+2025-08-27T07:55:44.717551161Z       error: [Function (anonymous)],
+2025-08-27T07:55:44.717553881Z       socket: [Function (anonymous)],
+2025-08-27T07:55:44.717556841Z       timeout: [Function (anonymous)],
+2025-08-27T07:55:44.717559101Z       finish: [Function: requestOnFinish]
+2025-08-27T07:55:44.717561381Z     },
+2025-08-27T07:55:44.717564132Z     _eventsCount: 7,
+2025-08-27T07:55:44.717567012Z     _maxListeners: undefined,
+2025-08-27T07:55:44.717569672Z     outputData: [],
+2025-08-27T07:55:44.717572122Z     outputSize: 0,
+2025-08-27T07:55:44.717574732Z     writable: true,
+2025-08-27T07:55:44.717577302Z     destroyed: true,
+2025-08-27T07:55:44.717580012Z     _last: true,
+2025-08-27T07:55:44.717582802Z     chunkedEncoding: false,
+2025-08-27T07:55:44.717585192Z     shouldKeepAlive: true,
+2025-08-27T07:55:44.717593492Z     maxRequestsOnConnectionReached: false,
+2025-08-27T07:55:44.717596292Z     _defaultKeepAlive: true,
+2025-08-27T07:55:44.717598822Z     useChunkedEncodingByDefault: false,
+2025-08-27T07:55:44.717601292Z     sendDate: false,
+2025-08-27T07:55:44.717603642Z     _removedConnection: false,
+2025-08-27T07:55:44.717605782Z     _removedContLen: false,
+2025-08-27T07:55:44.717607842Z     _removedTE: false,
+2025-08-27T07:55:44.717609822Z     strictContentLength: false,
+2025-08-27T07:55:44.717611792Z     _contentLength: 0,
+2025-08-27T07:55:44.717613812Z     _hasBody: true,
+2025-08-27T07:55:44.717615892Z     _trailer: '',
+2025-08-27T07:55:44.717617942Z     finished: true,
+2025-08-27T07:55:44.717619902Z     _headerSent: true,
+2025-08-27T07:55:44.717621962Z     _closed: true,
+2025-08-27T07:55:44.717624122Z     _header: 'GET /user/emails HTTP/1.1\r\n' +
+2025-08-27T07:55:44.717626582Z       'Accept: application/vnd.github.v3+json\r\n' +
+2025-08-27T07:55:44.717629162Z       'Authorization: token ghu_SOL5MSHtGNtLhlFcNgWdbHziHKwcj81zbrtU\r\n' +
+2025-08-27T07:55:44.717632193Z       'User-Agent: axios/1.11.0\r\n' +
+2025-08-27T07:55:44.717634813Z       'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+2025-08-27T07:55:44.717637313Z       'Host: api.github.com\r\n' +
+2025-08-27T07:55:44.717639893Z       'Connection: keep-alive\r\n' +
+2025-08-27T07:55:44.717642493Z       '\r\n',
+2025-08-27T07:55:44.717644933Z     _keepAliveTimeout: 0,
+2025-08-27T07:55:44.717647483Z     _onPendingData: [Function: nop],
+2025-08-27T07:55:44.717649993Z     agent: Agent {
+2025-08-27T07:55:44.717652383Z       _events: [Object: null prototype],
+2025-08-27T07:55:44.717654763Z       _eventsCount: 2,
+2025-08-27T07:55:44.717657563Z       _maxListeners: undefined,
+2025-08-27T07:55:44.717660463Z       options: [Object: null prototype],
+2025-08-27T07:55:44.717663013Z       defaultPort: 443,
+2025-08-27T07:55:44.717665883Z       protocol: 'https:',
+2025-08-27T07:55:44.717668443Z       requests: [Object: null prototype] {},
+2025-08-27T07:55:44.717671063Z       sockets: [Object: null prototype] {},
+2025-08-27T07:55:44.717673793Z       freeSockets: [Object: null prototype],
+2025-08-27T07:55:44.717699684Z       keepAliveMsecs: 1000,
+2025-08-27T07:55:44.717702744Z       keepAlive: true,
+2025-08-27T07:55:44.717704964Z       maxSockets: Infinity,
+2025-08-27T07:55:44.717707434Z       maxFreeSockets: 256,
+2025-08-27T07:55:44.717710224Z       scheduling: 'lifo',
+2025-08-27T07:55:44.717713394Z       maxTotalSockets: Infinity,
+2025-08-27T07:55:44.717716144Z       totalSocketCount: 2,
+2025-08-27T07:55:44.717718444Z       maxCachedSessions: 100,
+2025-08-27T07:55:44.717720824Z       _sessionCache: [Object],
+2025-08-27T07:55:44.717723734Z       Symbol(shapeMode): false,
+2025-08-27T07:55:44.717726314Z       Symbol(kCapture): false
+2025-08-27T07:55:44.717728834Z     },
+2025-08-27T07:55:44.717731594Z     socketPath: undefined,
+2025-08-27T07:55:44.717734104Z     method: 'GET',
+2025-08-27T07:55:44.717736554Z     maxHeaderSize: undefined,
+2025-08-27T07:55:44.717739555Z     insecureHTTPParser: undefined,
+2025-08-27T07:55:44.717742284Z     joinDuplicateHeaders: undefined,
+2025-08-27T07:55:44.717744644Z     path: '/user/emails',
+2025-08-27T07:55:44.717747175Z     _ended: true,
+2025-08-27T07:55:44.717749615Z     res: IncomingMessage {
+2025-08-27T07:55:44.717752025Z       _events: [Object],
+2025-08-27T07:55:44.717754585Z       _readableState: [ReadableState],
+2025-08-27T07:55:44.717756885Z       _maxListeners: undefined,
+2025-08-27T07:55:44.717758995Z       socket: null,
+2025-08-27T07:55:44.717766395Z       httpVersionMajor: 1,
+2025-08-27T07:55:44.717768545Z       httpVersionMinor: 1,
+2025-08-27T07:55:44.717770505Z       httpVersion: '1.1',
+2025-08-27T07:55:44.717785175Z       complete: true,
+2025-08-27T07:55:44.717788125Z       rawHeaders: [Array],
+2025-08-27T07:55:44.717790715Z       rawTrailers: [],
+2025-08-27T07:55:44.717793485Z       joinDuplicateHeaders: undefined,
+2025-08-27T07:55:44.717796225Z       aborted: false,
+2025-08-27T07:55:44.717798845Z       upgrade: false,
+2025-08-27T07:55:44.717801165Z       url: '',
+2025-08-27T07:55:44.717803396Z       method: null,
+2025-08-27T07:55:44.717805716Z       statusCode: 403,
+2025-08-27T07:55:44.717808585Z       statusMessage: 'Forbidden',
+2025-08-27T07:55:44.717811616Z       client: [TLSSocket],
+2025-08-27T07:55:44.717814396Z       _consuming: true,
+2025-08-27T07:55:44.717816966Z       _dumped: false,
+2025-08-27T07:55:44.717819396Z       req: [Circular *1],
+2025-08-27T07:55:44.717821946Z       _eventsCount: 4,
+2025-08-27T07:55:44.717824796Z       responseUrl: 'https://api.github.com/user/emails',
+2025-08-27T07:55:44.717827586Z       redirects: [],
+2025-08-27T07:55:44.717830126Z       Symbol(shapeMode): true,
+2025-08-27T07:55:44.717832376Z       Symbol(kCapture): false,
+2025-08-27T07:55:44.717834706Z       Symbol(kHeaders): [Object],
+2025-08-27T07:55:44.717837546Z       Symbol(kHeadersCount): 54,
+2025-08-27T07:55:44.717840286Z       Symbol(kTrailers): null,
+2025-08-27T07:55:44.717843006Z       Symbol(kTrailersCount): 0
+2025-08-27T07:55:44.717845436Z     },
+2025-08-27T07:55:44.717848296Z     aborted: false,
+2025-08-27T07:55:44.717850876Z     timeoutCb: null,
+2025-08-27T07:55:44.717853496Z     upgradeOrConnect: false,
+2025-08-27T07:55:44.717856106Z     parser: null,
+2025-08-27T07:55:44.717858566Z     maxHeadersCount: null,
+2025-08-27T07:55:44.717860957Z     reusedSocket: true,
+2025-08-27T07:55:44.717863946Z     host: 'api.github.com',
+2025-08-27T07:55:44.717866417Z     protocol: 'https:',
+2025-08-27T07:55:44.717868907Z     _redirectable: Writable {
+2025-08-27T07:55:44.717871467Z       _events: [Object],
+2025-08-27T07:55:44.717873917Z       _writableState: [WritableState],
+2025-08-27T07:55:44.717876527Z       _maxListeners: undefined,
+2025-08-27T07:55:44.717879187Z       _options: [Object],
+2025-08-27T07:55:44.717881217Z       _ended: true,
+2025-08-27T07:55:44.717883287Z       _ending: true,
+2025-08-27T07:55:44.717885287Z       _redirectCount: 0,
+2025-08-27T07:55:44.717887287Z       _redirects: [],
+2025-08-27T07:55:44.717889347Z       _requestBodyLength: 0,
+2025-08-27T07:55:44.717891777Z       _requestBodyBuffers: [],
+2025-08-27T07:55:44.717894427Z       _eventsCount: 3,
+2025-08-27T07:55:44.717897407Z       _onNativeResponse: [Function (anonymous)],
+2025-08-27T07:55:44.717899797Z       _currentRequest: [Circular *1],
+2025-08-27T07:55:44.717902247Z       _currentUrl: 'https://api.github.com/user/emails',
+2025-08-27T07:55:44.717904677Z       Symbol(shapeMode): true,
+2025-08-27T07:55:44.717907137Z       Symbol(kCapture): false
+2025-08-27T07:55:44.717909757Z     },
+2025-08-27T07:55:44.717912487Z     Symbol(shapeMode): false,
+2025-08-27T07:55:44.717914907Z     Symbol(kCapture): false,
+2025-08-27T07:55:44.717917338Z     Symbol(kBytesWritten): 0,
+2025-08-27T07:55:44.717920007Z     Symbol(kNeedDrain): false,
+2025-08-27T07:55:44.717922758Z     Symbol(corked): 0,
+2025-08-27T07:55:44.717925227Z     Symbol(kChunkedBuffer): [],
+2025-08-27T07:55:44.717927747Z     Symbol(kChunkedLength): 0,
+2025-08-27T07:55:44.717935868Z     Symbol(kSocket): TLSSocket {
+2025-08-27T07:55:44.717938688Z       _tlsOptions: [Object],
+2025-08-27T07:55:44.717941358Z       _secureEstablished: true,
+2025-08-27T07:55:44.717943638Z       _securePending: false,
+2025-08-27T07:55:44.717945778Z       _newSessionPending: false,
+2025-08-27T07:55:44.717948268Z       _controlReleased: true,
+2025-08-27T07:55:44.717951118Z       secureConnecting: false,
+2025-08-27T07:55:44.717953718Z       _SNICallback: null,
+2025-08-27T07:55:44.717956058Z       servername: 'api.github.com',
+2025-08-27T07:55:44.717958728Z       alpnProtocol: false,
+2025-08-27T07:55:44.717961558Z       authorized: true,
+2025-08-27T07:55:44.717964118Z       authorizationError: null,
+2025-08-27T07:55:44.717966628Z       encrypted: true,
+2025-08-27T07:55:44.717969148Z       _events: [Object: null prototype],
+2025-08-27T07:55:44.717971568Z       _eventsCount: 9,
+2025-08-27T07:55:44.717974228Z       connecting: false,
+2025-08-27T07:55:44.717976968Z       _hadError: false,
+2025-08-27T07:55:44.717979408Z       _parent: null,
+2025-08-27T07:55:44.717981839Z       _host: 'api.github.com',
+2025-08-27T07:55:44.717984328Z       _closeAfterHandlingError: false,
+2025-08-27T07:55:44.717986988Z       _readableState: [ReadableState],
+2025-08-27T07:55:44.717989319Z       _writableState: [WritableState],
+2025-08-27T07:55:44.717991349Z       allowHalfOpen: false,
+2025-08-27T07:55:44.717993349Z       _maxListeners: undefined,
+2025-08-27T07:55:44.717995429Z       _sockname: null,
+2025-08-27T07:55:44.717997479Z       _pendingData: null,
+2025-08-27T07:55:44.717999599Z       _pendingEncoding: '',
+2025-08-27T07:55:44.718001579Z       server: undefined,
+2025-08-27T07:55:44.718003629Z       _server: null,
+2025-08-27T07:55:44.718005719Z       ssl: [TLSWrap],
+2025-08-27T07:55:44.718007909Z       _requestCert: true,
+2025-08-27T07:55:44.718010469Z       _rejectUnauthorized: true,
+2025-08-27T07:55:44.718013209Z       timeout: 5000,
+2025-08-27T07:55:44.718015679Z       parser: null,
+2025-08-27T07:55:44.718018369Z       _httpMessage: null,
+2025-08-27T07:55:44.718020799Z       Symbol(alpncallback): null,
+2025-08-27T07:55:44.718023349Z       Symbol(res): [TLSWrap],
+2025-08-27T07:55:44.718026029Z       Symbol(verified): true,
+2025-08-27T07:55:44.718028629Z       Symbol(pendingSession): null,
+2025-08-27T07:55:44.718031209Z       Symbol(async_id_symbol): -1,
+2025-08-27T07:55:44.718034019Z       Symbol(kHandle): [TLSWrap],
+2025-08-27T07:55:44.718036509Z       Symbol(lastWriteQueueSize): 0,
+2025-08-27T07:55:44.718039129Z       Symbol(timeout): Timeout {
+2025-08-27T07:55:44.71804156Z         _idleTimeout: 5000,
+2025-08-27T07:55:44.71804416Z         _idlePrev: [TimersList],
+2025-08-27T07:55:44.718046729Z         _idleNext: [Timeout],
+2025-08-27T07:55:44.71804926Z         _idleStart: 281719,
+2025-08-27T07:55:44.71805181Z         _onTimeout: [Function: bound ],
+2025-08-27T07:55:44.7180543Z         _timerArgs: undefined,
+2025-08-27T07:55:44.7180569Z         _repeat: null,
+2025-08-27T07:55:44.71805972Z         _destroyed: false,
+2025-08-27T07:55:44.71806189Z         Symbol(refed): false,
+2025-08-27T07:55:44.71806412Z         Symbol(kHasPrimitive): false,
+2025-08-27T07:55:44.71806657Z         Symbol(asyncId): 1051,
+2025-08-27T07:55:44.71806938Z         Symbol(triggerId): 1049,
+2025-08-27T07:55:44.71807205Z         Symbol(kAsyncContextFrame): undefined
+2025-08-27T07:55:44.71807438Z       },
+2025-08-27T07:55:44.71807703Z       Symbol(kBuffer): null,
+2025-08-27T07:55:44.71807963Z       Symbol(kBufferCb): null,
+2025-08-27T07:55:44.71808728Z       Symbol(kBufferGen): null,
+2025-08-27T07:55:44.71808998Z       Symbol(shapeMode): true,
+2025-08-27T07:55:44.71809256Z       Symbol(kCapture): false,
+2025-08-27T07:55:44.71809521Z       Symbol(kSetNoDelay): false,
+2025-08-27T07:55:44.71809763Z       Symbol(kSetKeepAlive): true,
+2025-08-27T07:55:44.718100241Z       Symbol(kSetKeepAliveInitialDelay): 1,
+2025-08-27T07:55:44.71810277Z       Symbol(kBytesRead): 0,
+2025-08-27T07:55:44.718105281Z       Symbol(kBytesWritten): 0,
+2025-08-27T07:55:44.718107791Z       Symbol(connect-options): [Object]
+2025-08-27T07:55:44.718109911Z     },
+2025-08-27T07:55:44.718112031Z     Symbol(kOutHeaders): [Object: null prototype] {
+2025-08-27T07:55:44.718114171Z       accept: [Array],
+2025-08-27T07:55:44.718116251Z       authorization: [Array],
+2025-08-27T07:55:44.718118331Z       'user-agent': [Array],
+2025-08-27T07:55:44.718120361Z       'accept-encoding': [Array],
+2025-08-27T07:55:44.718122651Z       host: [Array]
+2025-08-27T07:55:44.718124691Z     },
+2025-08-27T07:55:44.718126761Z     Symbol(errored): null,
+2025-08-27T07:55:44.718129231Z     Symbol(kHighWaterMark): 65536,
+2025-08-27T07:55:44.718131861Z     Symbol(kRejectNonStandardBodyWrites): false,
+2025-08-27T07:55:44.718134841Z     Symbol(kUniqueHeaders): null
+2025-08-27T07:55:44.718137381Z   },
+2025-08-27T07:55:44.718139861Z   response: {
+2025-08-27T07:55:44.718142411Z     status: 403,
+2025-08-27T07:55:44.718144831Z     statusText: 'Forbidden',
+2025-08-27T07:55:44.718147531Z     headers: Object [AxiosHeaders] {
+2025-08-27T07:55:44.718159762Z       date: 'Wed, 27 Aug 2025 07:55:44 GMT',
+2025-08-27T07:55:44.718162702Z       'content-type': 'application/json; charset=utf-8',
+2025-08-27T07:55:44.718165411Z       'x-oauth-scopes': '',
+2025-08-27T07:55:44.718167832Z       'x-accepted-oauth-scopes': 'user, user:email',
+2025-08-27T07:55:44.718170632Z       'x-oauth-client-id': 'Iv23li0PJA4SqDdne40M',
+2025-08-27T07:55:44.718173372Z       'github-authentication-token-expiration': '2025-08-27 15:55:44 UTC',
+2025-08-27T07:55:44.718175962Z       'x-github-media-type': 'github.v3; format=json',
+2025-08-27T07:55:44.718178662Z       'x-accepted-github-permissions': 'emails=read',
+2025-08-27T07:55:44.718181402Z       'x-github-api-version-selected': '2022-11-28',
+2025-08-27T07:55:44.718183712Z       'x-ratelimit-limit': '5000',
+2025-08-27T07:55:44.718188862Z       'x-ratelimit-remaining': '4988',
+2025-08-27T07:55:44.718191862Z       'x-ratelimit-reset': '1756282348',
+2025-08-27T07:55:44.718194732Z       'x-ratelimit-used': '12',
+2025-08-27T07:55:44.718197272Z       'x-ratelimit-resource': 'core',
+2025-08-27T07:55:44.718201972Z       'access-control-expose-headers': 'ETag, Link, Location, Retry-After, X-GitHub-OTP, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Used, X-RateLimit-Resource, X-RateLimit-Reset, X-OAuth-Scopes, X-Accepted-OAuth-Scopes, X-Poll-Interval, X-GitHub-Media-Type, X-GitHub-SSO, X-GitHub-Request-Id, Deprecation, Sunset',
+2025-08-27T07:55:44.718204812Z       'access-control-allow-origin': '*',
+2025-08-27T07:55:44.718208102Z       'strict-transport-security': 'max-age=31536000; includeSubdomains; preload',
+2025-08-27T07:55:44.718210672Z       'x-frame-options': 'deny',
+2025-08-27T07:55:44.718213322Z       'x-content-type-options': 'nosniff',
+2025-08-27T07:55:44.718215932Z       'x-xss-protection': '0',
+2025-08-27T07:55:44.718218552Z       'referrer-policy': 'origin-when-cross-origin, strict-origin-when-cross-origin',
+2025-08-27T07:55:44.718221283Z       'content-security-policy': "default-src 'none'",
+2025-08-27T07:55:44.718223843Z       vary: 'Accept-Encoding, Accept, X-Requested-With',
+2025-08-27T07:55:44.718231363Z       'transfer-encoding': 'chunked',
+2025-08-27T07:55:44.718233883Z       server: 'github.com',
+2025-08-27T07:55:44.718236223Z       'x-github-request-id': 'BAEF:2BEB10:19EF3FF:1A9FCF5:68AEBA00'
+2025-08-27T07:55:44.718238193Z     },
+2025-08-27T07:55:44.718240253Z     config: {
+2025-08-27T07:55:44.718242373Z       transitional: [Object],
+2025-08-27T07:55:44.718244863Z       adapter: [Array],
+2025-08-27T07:55:44.718246833Z       transformRequest: [Array],
+2025-08-27T07:55:44.718248793Z       transformResponse: [Array],
+2025-08-27T07:55:44.718250873Z       timeout: 0,
+2025-08-27T07:55:44.718253133Z       xsrfCookieName: 'XSRF-TOKEN',
+2025-08-27T07:55:44.718255573Z       xsrfHeaderName: 'X-XSRF-TOKEN',
+2025-08-27T07:55:44.718258483Z       maxContentLength: -1,
+2025-08-27T07:55:44.718260983Z       maxBodyLength: -1,
+2025-08-27T07:55:44.718263413Z       env: [Object],
+2025-08-27T07:55:44.718265873Z       validateStatus: [Function: validateStatus],
+2025-08-27T07:55:44.718268423Z       headers: [Object [AxiosHeaders]],
+2025-08-27T07:55:44.718270923Z       method: 'get',
+2025-08-27T07:55:44.718273663Z       url: 'https://api.github.com/user/emails',
+2025-08-27T07:55:44.718275984Z       allowAbsoluteUrls: true,
+2025-08-27T07:55:44.718278233Z       data: undefined
+2025-08-27T07:55:44.718280893Z     },
+2025-08-27T07:55:44.718283813Z     request: <ref *1> ClientRequest {
+2025-08-27T07:55:44.718286224Z       _events: [Object: null prototype],
+2025-08-27T07:55:44.718289254Z       _eventsCount: 7,
+2025-08-27T07:55:44.718291834Z       _maxListeners: undefined,
+2025-08-27T07:55:44.718294484Z       outputData: [],
+2025-08-27T07:55:44.718296944Z       outputSize: 0,
+2025-08-27T07:55:44.718299524Z       writable: true,
+2025-08-27T07:55:44.718302224Z       destroyed: true,
+2025-08-27T07:55:44.718304444Z       _last: true,
+2025-08-27T07:55:44.718306554Z       chunkedEncoding: false,
+2025-08-27T07:55:44.718309034Z       shouldKeepAlive: true,
+2025-08-27T07:55:44.718311944Z       maxRequestsOnConnectionReached: false,
+2025-08-27T07:55:44.718314824Z       _defaultKeepAlive: true,
+2025-08-27T07:55:44.718317254Z       useChunkedEncodingByDefault: false,
+2025-08-27T07:55:44.718320024Z       sendDate: false,
+2025-08-27T07:55:44.718322694Z       _removedConnection: false,
+2025-08-27T07:55:44.718325364Z       _removedContLen: false,
+2025-08-27T07:55:44.718327984Z       _removedTE: false,
+2025-08-27T07:55:44.718330724Z       strictContentLength: false,
+2025-08-27T07:55:44.718333504Z       _contentLength: 0,
+2025-08-27T07:55:44.718336354Z       _hasBody: true,
+2025-08-27T07:55:44.718338905Z       _trailer: '',
+2025-08-27T07:55:44.718341345Z       finished: true,
+2025-08-27T07:55:44.718343905Z       _headerSent: true,
+2025-08-27T07:55:44.718346395Z       _closed: true,
+2025-08-27T07:55:44.718348965Z       _header: 'GET /user/emails HTTP/1.1\r\n' +
+2025-08-27T07:55:44.718351155Z         'Accept: application/vnd.github.v3+json\r\n' +
+2025-08-27T07:55:44.718353315Z         'Authorization: token ghu_SOL5MSHtGNtLhlFcNgWdbHziHKwcj81zbrtU\r\n' +
+2025-08-27T07:55:44.718355475Z         'User-Agent: axios/1.11.0\r\n' +
+2025-08-27T07:55:44.718357565Z         'Accept-Encoding: gzip, compress, deflate, br\r\n' +
+2025-08-27T07:55:44.718359625Z         'Host: api.github.com\r\n' +
+2025-08-27T07:55:44.718361695Z         'Connection: keep-alive\r\n' +
+2025-08-27T07:55:44.718363795Z         '\r\n',
+2025-08-27T07:55:44.718366035Z       _keepAliveTimeout: 0,
+2025-08-27T07:55:44.718368125Z       _onPendingData: [Function: nop],
+2025-08-27T07:55:44.718375985Z       agent: [Agent],
+2025-08-27T07:55:44.718378655Z       socketPath: undefined,
+2025-08-27T07:55:44.718381425Z       method: 'GET',
+2025-08-27T07:55:44.718383945Z       maxHeaderSize: undefined,
+2025-08-27T07:55:44.718386465Z       insecureHTTPParser: undefined,
+2025-08-27T07:55:44.718388965Z       joinDuplicateHeaders: undefined,
+2025-08-27T07:55:44.718391745Z       path: '/user/emails',
+2025-08-27T07:55:44.718394055Z       _ended: true,
+2025-08-27T07:55:44.718396246Z       res: [IncomingMessage],
+2025-08-27T07:55:44.718398815Z       aborted: false,
+2025-08-27T07:55:44.718401855Z       timeoutCb: null,
+2025-08-27T07:55:44.718404186Z       upgradeOrConnect: false,
+2025-08-27T07:55:44.718407286Z       parser: null,
+2025-08-27T07:55:44.718409836Z       maxHeadersCount: null,
+2025-08-27T07:55:44.718412426Z       reusedSocket: true,
+2025-08-27T07:55:44.718414986Z       host: 'api.github.com',
+2025-08-27T07:55:44.718417426Z       protocol: 'https:',
+2025-08-27T07:55:44.718420386Z       _redirectable: [Writable],
+2025-08-27T07:55:44.718422816Z       Symbol(shapeMode): false,
+2025-08-27T07:55:44.718425276Z       Symbol(kCapture): false,
+2025-08-27T07:55:44.718428016Z       Symbol(kBytesWritten): 0,
+2025-08-27T07:55:44.718430556Z       Symbol(kNeedDrain): false,
+2025-08-27T07:55:44.718433446Z       Symbol(corked): 0,
+2025-08-27T07:55:44.718435966Z       Symbol(kChunkedBuffer): [],
+2025-08-27T07:55:44.718438636Z       Symbol(kChunkedLength): 0,
+2025-08-27T07:55:44.718441066Z       Symbol(kSocket): [TLSSocket],
+2025-08-27T07:55:44.718443426Z       Symbol(kOutHeaders): [Object: null prototype],
+2025-08-27T07:55:44.718445916Z       Symbol(errored): null,
+2025-08-27T07:55:44.718448426Z       Symbol(kHighWaterMark): 65536,
+2025-08-27T07:55:44.718464496Z       Symbol(kRejectNonStandardBodyWrites): false,
+2025-08-27T07:55:44.718469597Z       Symbol(kUniqueHeaders): null
+2025-08-27T07:55:44.718471767Z     },
+2025-08-27T07:55:44.718473877Z     data: {
+2025-08-27T07:55:44.718476237Z       message: 'Resource not accessible by integration',
+2025-08-27T07:55:44.718479637Z       documentation_url: 'https://docs.github.com/rest/users/emails#list-email-addresses-for-the-authenticated-user',
+2025-08-27T07:55:44.718482877Z       status: '403'
+2025-08-27T07:55:44.718485457Z     }
+2025-08-27T07:55:44.718488057Z   },
+2025-08-27T07:55:44.718490667Z   status: 403
+2025-08-27T07:55:44.718493447Z }
+2025-08-27T07:55:46.329418765Z User connected: qVZQ6cLBjq603hbWAAAF
+2025-08-27T07:56:14.453294359Z ==> Detected service running on port 5432
+2025-08-27T07:56:14.554594752Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+2025-08-27T07:56:14.574670648Z Verification email sent to genii5831@gmail.com
+2025-08-27T07:56:40.740853283Z User authenticated with token: dev (ID: 1)
+2025-08-27T07:56:40.741339661Z <anonymous_script>:0
+2025-08-27T07:56:40.741364731Z 
+2025-08-27T07:56:40.741371081Z 
+2025-08-27T07:56:40.741377191Z [Error: SQLITE_CONSTRAINT: UNIQUE constraint failed: chat_room_participants.room_id, chat_room_participants.user_id
+2025-08-27T07:56:40.741382641Z Emitted 'error' event on Statement instance at:
+2025-08-27T07:56:40.741387312Z ] {
+2025-08-27T07:56:40.741391572Z   errno: 19,
+2025-08-27T07:56:40.741396782Z   code: 'SQLITE_CONSTRAINT'
+2025-08-27T07:56:40.741406962Z }
+2025-08-27T07:56:40.741411192Z 
+2025-08-27T07:56:40.741415042Z Node.js v24.6.0
+2025-08-27T07:56:48.159601803Z ==> Running 'node apps/server/server.js'
+2025-08-27T07:56:48.369933082Z [dotenv@17.2.1] injecting env (10) from apps/server/.env -- tip: 📡 observe env with Radar: https://dotenvx.com/radar
+2025-08-27T07:56:49.459232598Z Server running on port 5432
+2025-08-27T07:56:49.459261379Z Visit http://localhost:5432 to access the messenger
+2025-08-27T07:56:52.130718808Z User connected: He7_UG_ftNDwUSbLAAAB

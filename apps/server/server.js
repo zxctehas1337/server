@@ -1,12 +1,27 @@
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const cors = require('cors'); // Добавлено
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+
+// CORS middleware
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+const io = new Server(server, {
+  cors: {
+    origin: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Password'],
+    credentials: true
+  }
+});
 
 // SQLite database
 const db = new sqlite3.Database(':memory:');
@@ -67,9 +82,9 @@ db.serialize(() => {
 });
 
 // Middleware
+app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
-
 // Store connected users
 const connectedUsers = new Map();
 const userRooms = new Map();
@@ -96,8 +111,11 @@ app.get('/', (req, res) => {
 // GitHub OAuth endpoint
 app.get('/api/auth/github', (req, res) => {
     // Redirect to GitHub OAuth
-    const clientId = process.env.GITHUB_CLIENT_ID || 'your-github-client-id';
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    if (!clientId) {
+        return res.status(500).json({ error: 'GitHub Client ID not configured' });
+    }
+    const redirectUri = process.env.GITHUB_CALLBACK_URL || `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
     
     res.redirect(githubAuthUrl);
@@ -138,16 +156,22 @@ app.get('/api/auth/github/callback', async (req, res) => {
             }
         });
 
-        // Get user emails
-        const emailsResponse = await axios.get('https://api.github.com/user/emails', {
-            headers: {
-                'Authorization': `token ${access_token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+        // Get user emails (optional; may be forbidden for some tokens)
+        let emails = [];
+        try {
+            const emailsResponse = await axios.get('https://api.github.com/user/emails', {
+                headers: {
+                    'Authorization': `token ${access_token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            emails = emailsResponse.data || [];
+        } catch (e) {
+            // Continue without emails; will create user without email
+            emails = [];
+        }
 
         const userData = userResponse.data;
-        const emails = emailsResponse.data;
         const primaryEmail = emails.find(email => email.primary)?.email || emails[0]?.email;
 
         // Check if user already exists
@@ -198,7 +222,7 @@ app.get('/api/auth/github/callback', async (req, res) => {
                             
                             // Add user to general chat room
                             db.run(
-                                'INSERT INTO chat_room_participants (room_id, user_id) VALUES (?, ?)',
+                                'INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (?, ?)',
                                 [1, this.lastID],
                                 (participantErr) => {
                                     if (participantErr) {
@@ -268,11 +292,83 @@ app.post('/api/auth/register', (req, res) => {
                     return res.status(500).json({ success: false, error: 'Ошибка при регистрации' });
                 }
                 
-                console.log(`Verification code for ${email}: ${verificationCode}`);
-                res.json({ success: true, message: 'Код подтверждения отправлен на ваш email' });
+                // Send verification email via SMTP
+                const { sendVerificationEmail } = require('./utils/email.js');
+                sendVerificationEmail(email, username, verificationCode)
+                    .then(() => {
+                        res.json({ success: true, message: 'Код подтверждения отправлен на ваш email' });
+                    })
+                    .catch(async (emailErr) => {
+                        console.error('Email sending error:', emailErr);
+                        // Rollback: delete user if email failed to send
+                        db.run('DELETE FROM users WHERE id = ?', [this.lastID], () => {
+                            return res.status(500).json({ success: false, error: 'Ошибка при отправке email. Попробуйте позже.' });
+                        });
+                    });
             }
         );
     });
+});
+
+// Username/password login
+app.post('/api/auth/login', (req, res) => {
+    const { username, email, identifier, password } = req.body;
+
+    const loginIdentifier = identifier || email || username;
+
+    if (!loginIdentifier || !password) {
+        return res.status(400).json({ success: false, error: 'Имя пользователя/Email и пароль обязательны' });
+    }
+
+    db.get(
+        'SELECT id, username, password_hash, avatar_url, email, email_verified FROM users WHERE username = ? OR email = ?',
+        [loginIdentifier, loginIdentifier],
+        (err, user) => {
+            if (err) {
+                return res.status(500).json({ success: false, error: 'Ошибка при поиске пользователя' });
+            }
+
+            if (!user) {
+                return res.status(401).json({ success: false, error: 'Неверное имя пользователя или пароль' });
+            }
+
+            // If user registered with email/password, enforce verified email before login
+            if (user.email && !user.email_verified) {
+                return res.status(401).json({ success: false, error: 'Пожалуйста, подтвердите ваш email перед входом' });
+            }
+
+            const bcrypt = require('bcrypt');
+            bcrypt.compare(password, user.password_hash || '', (compareErr, isMatch) => {
+                if (compareErr) {
+                    return res.status(500).json({ success: false, error: 'Ошибка при проверке пароля' });
+                }
+
+                if (!isMatch) {
+                    return res.status(401).json({ success: false, error: 'Неверное имя пользователя или пароль' });
+                }
+
+                // Ensure avatar_url is present
+                const seed = (user.username || user.email || loginIdentifier).toLowerCase();
+                const avatarUrl = user.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=6366f1`;
+
+                // Update last seen and avatar if missing
+                db.run('UPDATE users SET last_seen = CURRENT_TIMESTAMP, avatar_url = COALESCE(avatar_url, ?) WHERE id = ?', [avatarUrl, user.id]);
+
+                // Ensure user is in general chat room
+                db.run('INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
+
+                const tokenPayload = {
+                    id: user.id,
+                    username: user.username,
+                    email: user.email,
+                    avatar_url: avatarUrl
+                };
+                const token = Buffer.from(JSON.stringify(tokenPayload)).toString('base64');
+
+                return res.json({ success: true, token });
+            });
+        }
+    );
 });
 
 // Email login: start (send code)
@@ -311,9 +407,15 @@ app.post('/api/auth/login-email-start', (req, res) => {
                     if (updateErr) {
                         return res.status(500).json({ success: false, error: 'Ошибка при создании кода' });
                     }
-
-                    console.log(`Login code for ${email}: ${verificationCode}`);
-                    return res.json({ success: true, message: 'Код входа отправлен на ваш email' });
+                    // Send code via email
+                    const { sendVerificationEmail } = require('./utils/email.js');
+                    sendVerificationEmail(email, user.username, verificationCode)
+                        .then(() => {
+                            return res.json({ success: true, message: 'Код входа отправлен на ваш email' });
+                        })
+                        .catch(() => {
+                            return res.status(500).json({ success: false, error: 'Ошибка при отправке email' });
+                        });
                 }
             );
         }
@@ -412,7 +514,7 @@ app.post('/api/auth/verify-email', (req, res) => {
                     
                     // Add user to general chat room
                     db.run(
-                        'INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)',
+                        'INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)',
                         [user.id]
                     );
                     
@@ -457,9 +559,15 @@ app.post('/api/auth/resend-code', (req, res) => {
                     if (err) {
                         return res.status(500).json({ success: false, error: 'Ошибка при обновлении кода' });
                     }
-                    
-                    console.log(`New verification code for ${email}: ${verificationCode}`);
-                    res.json({ success: true, message: 'Код подтверждения отправлен повторно' });
+                    // Send verification email
+                    const { sendVerificationEmail } = require('./utils/email.js');
+                    sendVerificationEmail(email, user.username, verificationCode)
+                        .then(() => {
+                            res.json({ success: true, message: 'Код подтверждения отправлен повторно' });
+                        })
+                        .catch(() => {
+                            res.status(500).json({ success: false, error: 'Ошибка при отправке email' });
+                        });
                 }
             );
         }
@@ -480,12 +588,31 @@ io.on('connection', (socket) => {
         }
         
         try {
-            const userData = JSON.parse(Buffer.from(token, 'base64').toString());
+            let userData = null;
+            // Support both Base64 tokens and JWTs
+            if (typeof token === 'string' && token.split('.').length === 3) {
+                try {
+                    const jwt = require('jsonwebtoken');
+                    userData = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+                } catch (_) {
+                    // If JWT verification fails, fall back to base64 parsing
+                    userData = JSON.parse(Buffer.from(token, 'base64').toString());
+                }
+            } else {
+                userData = JSON.parse(Buffer.from(token, 'base64').toString());
+            }
             
-            // Find user in database
+            // Prefer lookup by id/userId if present, otherwise by username
+            const lookupId = userData.userId || userData.id;
+            const lookupUsername = userData.username;
+            const querySql = lookupId
+                ? 'SELECT id, username, email, avatar_url, email_verified FROM users WHERE id = ?'
+                : 'SELECT id, username, email, avatar_url, email_verified FROM users WHERE username = ?';
+            const queryParam = lookupId ? [lookupId] : [lookupUsername];
+
             db.get(
-                'SELECT id, username, email, avatar_url, email_verified FROM users WHERE username = ?',
-                [userData.username],
+                querySql,
+                queryParam,
                 (err, user) => {
                     if (err) {
                         socket.emit('token_auth_error', { error: 'Database error' });
@@ -527,8 +654,8 @@ io.on('connection', (socket) => {
                         }
                     });
                     
-                    // Add user to general chat room
-                    db.run('INSERT INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
+                    // Add user to general chat room (idempotent)
+                    db.run('INSERT OR IGNORE INTO chat_room_participants (room_id, user_id) VALUES (1, ?)', [user.id]);
                     
                     // Broadcast online users
                     broadcastOnlineUsers();
@@ -549,12 +676,12 @@ io.on('connection', (socket) => {
 
     // Username/password login removed in favor of GitHub OAuth and Email code login
     
-    // Handle joining room
+    // Handle joining room (single general room only)
     socket.on('join_room', (data) => {
         const userInfo = connectedUsers.get(socket.id);
         if (!userInfo) return;
         
-        const { roomId } = data;
+        const numericRoomId = 1;
         
         // Leave current room
         if (userInfo.roomId) {
@@ -562,8 +689,8 @@ io.on('connection', (socket) => {
         }
         
         // Join new room
-        socket.join(`room_${roomId}`);
-        userInfo.roomId = roomId;
+        socket.join(`room_${numericRoomId}`);
+        userInfo.roomId = numericRoomId;
         
         // Get recent messages
         db.all(
@@ -573,24 +700,24 @@ io.on('connection', (socket) => {
              WHERE m.room_id = ? 
              ORDER BY m.timestamp DESC 
              LIMIT 50`,
-            [roomId],
+            [numericRoomId],
             (err, messages) => {
                 socket.emit('room_joined', {
                     success: true,
-                    roomId: roomId,
+                    roomId: numericRoomId,
                     messages: messages ? messages.reverse() : []
                 });
             }
         );
     });
     
-    // Handle messages
+    // Handle messages (force general room)
     socket.on('send_message', (data) => {
         const userInfo = connectedUsers.get(socket.id);
         if (!userInfo) return;
         
-        const { content, roomId } = data;
-        const targetRoomId = roomId || userInfo.roomId || 1;
+        const { content } = data;
+        const targetRoomId = 1;
         
         if (!content || content.trim().length === 0) return;
         

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kracken Messenger</title>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://api.dicebear.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; connect-src 'self' ws: wss: https:; media-src 'self' data:; object-src 'none'; base-uri 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' https://api.dicebear.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' ws: wss: https:; media-src 'self' data:; object-src 'none'; base-uri 'self'">
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="style.css">
@@ -12,22 +12,19 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
         <header class="header">
             <div class="header-left">
+                <img src="logo.png" alt="KrackenX" class="header-logo">
                 <button id="mobileNavBtn" class="mobile-nav-btn" title="Toggle Menu">
-                    <span>☰</span>
+                    <span>Menu</span>
                 </button>
                 <div class="logo">
-                    <div class="logo-icon">⚡</div>
+                    <div class="logo-icon" aria-hidden="true"></div>
                     <h1>Kracken</h1>
                 </div>
             </div>
             <div class="header-right">
                 <div id="userInfo" class="user-info"></div>
-                <button id="themeToggle" class="theme-toggle" title="Toggle Theme">
-                    <span class="theme-icon">🌙</span>
-                </button>
             </div>
         </header>
 
@@ -36,14 +33,14 @@
             <div class="auth-container">
                 <!-- Welcome Section -->
                 <div class="welcome-section">
-                    <div class="logo-large">⚡</div>
+                    <div class="logo-large" aria-hidden="true"></div>
                     <h1>Добро пожаловать в Kracken</h1>
                     <p>Быстрый и безопасный мессенджер</p>
                 </div>
 
                 <!-- Auth Forms Container -->
                 <div class="auth-forms">
-                    <!-- Login Form (Email code) -->
+                    <!-- Login Form (Email + Password) -->
                     <form id="loginForm" class="auth-form">
                         <h2>Войти по email</h2>
                         <div class="form-group">
@@ -51,7 +48,12 @@
                             <input type="email" id="loginEmail" name="email" required 
                                    placeholder="Введите email">
                         </div>
-                        <button type="submit" class="btn-primary">Получить код</button>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль:</label>
+                            <input type="password" id="loginPassword" name="password" required 
+                                   placeholder="Введите пароль">
+                        </div>
+                        <button type="submit" class="btn-primary">Войти</button>
                         
                         <div class="divider">
                             <span>или</span>
@@ -65,13 +67,7 @@
                             <span>Продолжить с GitHub</span>
                         </button>
                         
-                        <!-- Email Login Button -->
-                        <button type="button" id="emailLoginBtn" class="oauth-btn email-btn">
-                            <svg class="email-icon" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                            </svg>
-                            <span>Войти через Email</span>
-                        </button>
+                        <!-- Email login button removed; direct form above -->
                         
                         <div class="form-footer">
                             <p>Нет аккаунта? <a href="#" id="showRegisterBtn">Зарегистрироваться через email</a></p>
@@ -177,7 +173,7 @@
                         </div>
                     </div>
                     <div class="chat-header-actions">
-                        <button id="chatSettingsBtn" class="icon-btn" title="Chat Settings">⚙️</button>
+                        <button id="chatSettingsBtn" class="icon-btn" title="Chat Settings">Settings</button>
                     </div>
                 </div>
 
@@ -190,7 +186,7 @@
                 <form id="messageForm" class="message-form">
                     <div class="input-group">
                         <button type="button" id="attachBtn" class="attachment-btn" title="Attach file">📎</button>
-                        <input type="text" id="messageInput" placeholder="Type your message..." 
+                        <input type="text" id="messageInput" placeholder="Введите сообщение..." 
                                maxlength="1000" autocomplete="off">
                         <button type="button" id="emojiBtn" class="emoji-btn" title="Emoji">😊</button>
                         <button type="submit" id="sendBtn" class="send-btn">

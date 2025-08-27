@@ -17,8 +17,9 @@ const registerForm = document.getElementById('registerForm');
 const emailVerificationForm = document.getElementById('emailVerificationForm');
 const messageForm = document.getElementById('messageForm');
 
-// Login form elements (email-only)
+// Login form elements (email + password)
 const loginEmailInput = document.getElementById('loginEmail');
+const loginPasswordInput = document.getElementById('loginPassword');
 
 // Register form elements
 const regUsernameInput = document.getElementById('regUsername');
@@ -53,6 +54,7 @@ const newChatBtn = document.getElementById('newChatBtn');
 const chatList = document.querySelector('.chat-list');
 
 // Invitation modal elements
+const ENABLE_PRIVATE = false;
 const invitationModal = document.getElementById('invitationModal');
 const invitationAvatar = document.getElementById('invitationAvatar');
 const invitationTitle = document.getElementById('invitationTitle');
@@ -105,7 +107,7 @@ let currentUser = null;
 let isConnected = false;
 let currentRoom = { id: 1, name: 'General Chat', type: 'general' };
 let onlineUsers = new Map();
-let theme = localStorage.getItem('theme') || 'light';
+let theme = localStorage.getItem('theme') || 'dark';
 
 // Initialize theme
 document.documentElement.setAttribute('data-theme', theme);
@@ -166,7 +168,7 @@ function toggleTheme() {
 function updateThemeIcon() {
   const themeIcon = document.querySelector('.theme-icon');
   if (themeIcon) {
-    themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+    themeIcon.textContent = theme === 'light' ? 'Theme' : 'Theme';
   }
 }
 
@@ -308,8 +310,8 @@ function updateOnlineUsers(users) {
       <div class="user-status"></div>
     `;
     
-    // Add click handler for private chat
-    if (user.id !== currentUser?.id) {
+    // Private chat disabled
+    if (ENABLE_PRIVATE && user.id !== currentUser?.id) {
       userItem.style.cursor = 'pointer';
       userItem.addEventListener('click', () => startPrivateChat(user));
     }
@@ -319,74 +321,22 @@ function updateOnlineUsers(users) {
 }
 
 function startPrivateChat(user) {
-  // Create or switch to private chat
-  const chatId = `private_${Math.min(currentUser.id, user.id)}_${Math.max(currentUser.id, user.id)}`;
-  
-  // Check if chat already exists
-  let existingChat = document.querySelector(`[data-room-id="${chatId}"]`);
-  
-  if (!existingChat) {
-    // Create new private chat item
-    const chatItem = document.createElement('div');
-    chatItem.className = 'chat-item';
-    chatItem.setAttribute('data-room-id', chatId);
-    chatItem.setAttribute('data-room-type', 'private');
-    
-    chatItem.innerHTML = `
-      <div class="chat-avatar">
-        <div class="avatar-placeholder">${getAvatarInitials(user.username)}</div>
-      </div>
-      <div class="chat-info">
-        <div class="chat-name">${escapeHtml(user.username)}</div>
-        <div class="chat-last-message">Start a conversation...</div>
-      </div>
-      <div class="chat-meta">
-        <div class="unread-count" style="display: none;">0</div>
-      </div>
-    `;
-    
-    chatItem.addEventListener('click', () => switchChat({
-      id: chatId,
-      name: user.username,
-      type: 'private',
-      userId: user.id
-    }));
-    
-    chatList.appendChild(chatItem);
-  }
-  
-  // Switch to this chat
-  switchChat({
-    id: chatId,
-    name: user.username,
-    type: 'private',
-    userId: user.id
-  });
+  showStatus('Приватные чаты отключены. Сообщения отправляются в общий чат.', 'info');
+  switchChat({ id: 1, name: 'General Chat', type: 'general' });
 }
 
 function switchChat(room) {
-  // Update active chat
+  // Force single general room
   document.querySelectorAll('.chat-item').forEach(item => {
     item.classList.remove('active');
   });
-  
-  const chatItem = document.querySelector(`[data-room-id="${room.id}"]`);
-  if (chatItem) {
-    chatItem.classList.add('active');
-  }
-  
-  // Update current room
-  currentRoom = room;
-  currentChatName.textContent = room.name;
-  currentChatStatus.textContent = room.type === 'private' ? 'Private conversation' : 'Public room';
-  
-  // Clear messages (in a real app, you'd load the chat history)
+  const generalItem = document.querySelector('[data-room-id="1"]');
+  if (generalItem) generalItem.classList.add('active');
+  currentRoom = { id: 1, name: 'General Chat', type: 'general' };
+  currentChatName.textContent = 'General Chat';
+  currentChatStatus.textContent = 'Public room';
   messagesDiv.innerHTML = '';
-  
-  // Request chat history from server
-  socket.emit('join_room', { roomId: room.id, roomType: room.type });
-  
-  showStatus(`Switched to ${room.name}`, 'info');
+  socket.emit('join_room', { roomId: 1, roomType: 'general' });
 }
 
 // Socket Event Handlers
@@ -547,8 +497,13 @@ if (loginForm) {
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = loginEmailInput ? loginEmailInput.value.trim() : '';
+    const password = loginPasswordInput ? loginPasswordInput.value : '';
     if (!email || !email.includes('@')) {
       showStatus('Пожалуйста, введите корректный email', 'error');
+      return;
+    }
+    if (!password || password.length < 6) {
+      showStatus('Пароль должен содержать минимум 6 символов', 'error');
       return;
     }
     const submitButton = loginForm.querySelector('button');
@@ -557,25 +512,24 @@ if (loginForm) {
       return;
     }
     const originalText = submitButton.textContent;
-    submitButton.textContent = 'Отправка кода...';
+    submitButton.textContent = 'Вход...';
     submitButton.disabled = true;
 
-    fetch('/api/auth/login-email-start', {
+    fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, password })
     })
     .then(r => r.json())
     .then(data => {
-      if (data.success) {
-        emailLoginContext.email = email;
-        showStatus('Код отправлен на ваш email', 'success');
-        showVerificationForm(email);
+      if (data.success && data.token) {
+        localStorage.setItem('accessToken', data.token);
+        socket.emit('authenticate_with_token', { token: data.token });
       } else {
-        showStatus(data.error || 'Ошибка при отправке кода', 'error');
+        showStatus(data.error || 'Ошибка входа', 'error');
       }
     })
-    .catch(() => showStatus('Ошибка при отправке кода', 'error'))
+    .catch(() => showStatus('Ошибка входа', 'error'))
     .finally(() => {
       if (submitButton) {
         submitButton.textContent = originalText;
@@ -845,18 +799,8 @@ if (themeToggle) {
 // New chat button handler
 if (newChatBtn) {
   newChatBtn.addEventListener('click', () => {
-  // For now, just show a simple prompt
-  const username = prompt('Enter username to start a private chat:');
-  if (username && username.trim()) {
-    const user = Array.from(onlineUsers.values()).find(u => 
-      u.username.toLowerCase() === username.trim().toLowerCase()
-    );
-    if (user) {
-      startPrivateChat(user);
-    } else {
-      showStatus('User not found or not online', 'error');
-    }
-  }
+    showStatus('Доступен только общий чат', 'info');
+    switchChat({ id: 1, name: 'General Chat', type: 'general' });
   });
 }
 
@@ -936,12 +880,7 @@ if (githubLoginFromRegisterBtn) {
   });
 }
 
-// Email login handler (ensure login form visible)
-if (emailLoginBtn) {
-  emailLoginBtn.addEventListener('click', () => {
-    showLoginForm();
-  });
-}
+// Remove emailLoginBtn behavior (button removed from DOM)
 
 // Auto-focus on email input when page loads
 document.addEventListener('DOMContentLoaded', () => {

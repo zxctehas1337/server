@@ -2,7 +2,7 @@
 
 const fetch = require('node-fetch');
 
-const SERVER_URL = 'https://beckend-yaj1.onrender.com';
+const SERVER_URL = 'https://krackenx.onrender.com';
 
 async function testEndpoint(url, options = {}) {
     try {
@@ -75,7 +75,7 @@ async function runTests() {
     console.log('1. Настройте GitHub OAuth App');
     console.log('2. Добавьте переменные окружения в Render');
     console.log('3. Выполните миграцию базы данных');
-    console.log('4. Протестируйте через веб-интерфейс: https://beckend-yaj1.onrender.com/test-oauth.html');
+    console.log('4. Протестируйте через веб-интерфейс: https://krackenx.onrender.com/test-oauth.html');
 }
 
 // Запуск тестов
