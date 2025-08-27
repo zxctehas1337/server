@@ -89,9 +89,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   z-index: 100;
 }
 
@@ -930,17 +930,12 @@ body {
   transform: translateX(0);
 }
 
-.status-message.error {
-  background: var(--bg-error);
-}
-
-.status-message.success {
-  background: var(--bg-success);
-}
-
-.status-message.info {
-  background: var(--bg-accent);
-}
+/* High-contrast status toasts for both themes */
+[data-theme="light"] .status-message { background: #000000; color: #ffffff; }
+[data-theme="dark"] .status-message { background: #ffffff; color: #000000; }
+.status-message.error { opacity: 0.95; }
+.status-message.success { opacity: 0.95; }
+.status-message.info { opacity: 0.95; }
 
 /* Scrollbar Styling */
 .messages-container::-webkit-scrollbar,
