@@ -343,6 +343,15 @@ function switchChat(room) {
 socket.on('connect', () => {
   console.log('Connected to server');
   isConnected = true;
+  try {
+    // Auto-authenticate on (re)connect if we have a stored token
+    if (!currentUser) {
+      const storedToken = localStorage.getItem('accessToken');
+      if (storedToken) {
+        socket.emit('authenticate_with_token', { token: storedToken });
+      }
+    }
+  } catch (_) {}
 });
 
 socket.on('disconnect', (reason) => {
@@ -352,17 +361,7 @@ socket.on('disconnect', (reason) => {
   // Check if this is an unexpected disconnect (not user-initiated)
   if (reason === 'io server disconnect' || reason === 'transport close') {
     showStatus('Connection lost. Reconnecting...', 'error');
-    
-    // If user is logged in, show them they've been disconnected
-    if (currentUser) {
-      // Reset UI to login state after a delay to allow for reconnection
-      setTimeout(() => {
-        if (!socket.connected) {
-          console.log('Firefox disconnect detected, resetting to login');
-          resetToLogin();
-        }
-      }, 3000);
-    }
+    // Do not reset UI immediately; allow auto re-auth on reconnect if token exists
   } else {
     showStatus('Disconnected from server', 'error');
   }
@@ -906,6 +905,16 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Auto-login with token
       socket.emit('authenticate_with_token', { token });
+    }
+  } catch (_) {}
+
+  // If there's already a stored token (e.g., username/password or previous OAuth), try to auto-login
+  try {
+    if (!currentUser) {
+      const storedToken = localStorage.getItem('accessToken');
+      if (storedToken) {
+        socket.emit('authenticate_with_token', { token: storedToken });
+      }
     }
   } catch (_) {}
 });
