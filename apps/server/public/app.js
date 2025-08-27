@@ -548,6 +548,7 @@ if (registerForm) {
     const email = regEmailInput ? regEmailInput.value.trim() : '';
     const password = regPasswordInput ? regPasswordInput.value : '';
     const passwordConfirm = regPasswordConfirmInput ? regPasswordConfirmInput.value : '';
+    const tosAccepted = document.getElementById('regTos') ? document.getElementById('regTos').checked : false;
     
     // Validation
     if (!username || !email || !password || !passwordConfirm) {
@@ -575,6 +576,11 @@ if (registerForm) {
       return;
     }
     
+    if (!tosAccepted) {
+      showStatus('Нужно принять условия соглашения и политику конфиденциальности', 'error');
+      return;
+    }
+    
     // Disable form while processing
     const submitButton = registerForm.querySelector('button');
     if (!submitButton) {
@@ -591,7 +597,7 @@ if (registerForm) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ username, email, password })
+    body: JSON.stringify({ username, email, password, tosAccepted: true })
   })
   .then(response => response.json())
   .then(data => {
