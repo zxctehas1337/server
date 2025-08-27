@@ -70,7 +70,8 @@ body {
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .app-container {
@@ -143,6 +144,7 @@ body {
   justify-content: center;
   padding: 2rem;
   z-index: 10;
+  overflow-y: auto;
 }
 
 .auth-container {
