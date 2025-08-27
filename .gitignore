@@ -130,3 +130,4 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+apps/server/log.txt
