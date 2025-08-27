@@ -107,7 +107,7 @@ let currentUser = null;
 let isConnected = false;
 let currentRoom = { id: 1, name: 'General Chat', type: 'general' };
 let onlineUsers = new Map();
-let theme = localStorage.getItem('theme') || 'light';
+let theme = localStorage.getItem('theme') || 'dark';
 
 // Initialize theme
 document.documentElement.setAttribute('data-theme', theme);
