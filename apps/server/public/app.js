@@ -484,8 +484,9 @@ socket.on('room_joined', (data) => {
   }
 });
 
-socket.on('error', (data) => {
-  showStatus(data.message || 'An error occurred', 'error');
+// Handle server-side errors without triggering socket.io reserved error semantics
+socket.on('server_error', (data) => {
+  showStatus(data && data.message ? data.message : 'An error occurred', 'error');
 });
 
 // Form Event Handlers
