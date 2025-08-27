@@ -4,16 +4,23 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const cors = require('cors'); // Добавлено
 
 const app = express();
 const server = createServer(app);
+
+// CORS middleware
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 const io = new Server(server, {
-    cors: {
-        origin: true,
-        methods: ['GET', 'POST'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Password'],
-        credentials: true
-    }
+  cors: {
+    origin: true,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Admin-Password'],
+    credentials: true
+  }
 });
 
 // SQLite database
@@ -78,7 +85,6 @@ db.serialize(() => {
 app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
-
 // Store connected users
 const connectedUsers = new Map();
 const userRooms = new Map();
