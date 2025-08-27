@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
@@ -96,8 +97,11 @@ app.get('/', (req, res) => {
 // GitHub OAuth endpoint
 app.get('/api/auth/github', (req, res) => {
     // Redirect to GitHub OAuth
-    const clientId = process.env.GITHUB_CLIENT_ID || 'your-github-client-id';
-    const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    if (!clientId) {
+        return res.status(500).json({ error: 'GitHub Client ID not configured' });
+    }
+    const redirectUri = process.env.GITHUB_CALLBACK_URL || `${req.protocol}://${req.get('host')}/api/auth/github/callback`;
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user:email`;
     
     res.redirect(githubAuthUrl);
@@ -268,8 +272,19 @@ app.post('/api/auth/register', (req, res) => {
                     return res.status(500).json({ success: false, error: 'Ошибка при регистрации' });
                 }
                 
-                console.log(`Verification code for ${email}: ${verificationCode}`);
-                res.json({ success: true, message: 'Код подтверждения отправлен на ваш email' });
+                // Send verification email via SMTP
+                const { sendVerificationEmail } = require('./utils/email.js');
+                sendVerificationEmail(email, username, verificationCode)
+                    .then(() => {
+                        res.json({ success: true, message: 'Код подтверждения отправлен на ваш email' });
+                    })
+                    .catch(async (emailErr) => {
+                        console.error('Email sending error:', emailErr);
+                        // Rollback: delete user if email failed to send
+                        db.run('DELETE FROM users WHERE id = ?', [this.lastID], () => {
+                            return res.status(500).json({ success: false, error: 'Ошибка при отправке email. Попробуйте позже.' });
+                        });
+                    });
             }
         );
     });
@@ -311,9 +326,15 @@ app.post('/api/auth/login-email-start', (req, res) => {
                     if (updateErr) {
                         return res.status(500).json({ success: false, error: 'Ошибка при создании кода' });
                     }
-
-                    console.log(`Login code for ${email}: ${verificationCode}`);
-                    return res.json({ success: true, message: 'Код входа отправлен на ваш email' });
+                    // Send code via email
+                    const { sendVerificationEmail } = require('./utils/email.js');
+                    sendVerificationEmail(email, user.username, verificationCode)
+                        .then(() => {
+                            return res.json({ success: true, message: 'Код входа отправлен на ваш email' });
+                        })
+                        .catch(() => {
+                            return res.status(500).json({ success: false, error: 'Ошибка при отправке email' });
+                        });
                 }
             );
         }
@@ -457,9 +478,15 @@ app.post('/api/auth/resend-code', (req, res) => {
                     if (err) {
                         return res.status(500).json({ success: false, error: 'Ошибка при обновлении кода' });
                     }
-                    
-                    console.log(`New verification code for ${email}: ${verificationCode}`);
-                    res.json({ success: true, message: 'Код подтверждения отправлен повторно' });
+                    // Send verification email
+                    const { sendVerificationEmail } = require('./utils/email.js');
+                    sendVerificationEmail(email, user.username, verificationCode)
+                        .then(() => {
+                            res.json({ success: true, message: 'Код подтверждения отправлен повторно' });
+                        })
+                        .catch(() => {
+                            res.status(500).json({ success: false, error: 'Ошибка при отправке email' });
+                        });
                 }
             );
         }
