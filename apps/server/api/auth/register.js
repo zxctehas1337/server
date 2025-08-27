@@ -9,11 +9,15 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, tosAccepted } = req.body;
 
     // Validation
     if (!username || !email || !password) {
       return badRequest(res, 'Все поля обязательны для заполнения');
+    }
+
+    if (!tosAccepted) {
+      return badRequest(res, 'Вы должны принять условия соглашения и политику конфиденциальности');
     }
 
     if (username.length < 3) {
