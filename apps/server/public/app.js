@@ -54,6 +54,7 @@ const newChatBtn = document.getElementById('newChatBtn');
 const chatList = document.querySelector('.chat-list');
 
 // Invitation modal elements
+const ENABLE_PRIVATE = false;
 const invitationModal = document.getElementById('invitationModal');
 const invitationAvatar = document.getElementById('invitationAvatar');
 const invitationTitle = document.getElementById('invitationTitle');
@@ -309,8 +310,8 @@ function updateOnlineUsers(users) {
       <div class="user-status"></div>
     `;
     
-    // Add click handler for private chat
-    if (user.id !== currentUser?.id) {
+    // Private chat disabled
+    if (ENABLE_PRIVATE && user.id !== currentUser?.id) {
       userItem.style.cursor = 'pointer';
       userItem.addEventListener('click', () => startPrivateChat(user));
     }
@@ -320,74 +321,22 @@ function updateOnlineUsers(users) {
 }
 
 function startPrivateChat(user) {
-  // Create or switch to private chat
-  const chatId = `private_${Math.min(currentUser.id, user.id)}_${Math.max(currentUser.id, user.id)}`;
-  
-  // Check if chat already exists
-  let existingChat = document.querySelector(`[data-room-id="${chatId}"]`);
-  
-  if (!existingChat) {
-    // Create new private chat item
-    const chatItem = document.createElement('div');
-    chatItem.className = 'chat-item';
-    chatItem.setAttribute('data-room-id', chatId);
-    chatItem.setAttribute('data-room-type', 'private');
-    
-    chatItem.innerHTML = `
-      <div class="chat-avatar">
-        <div class="avatar-placeholder">${getAvatarInitials(user.username)}</div>
-      </div>
-      <div class="chat-info">
-        <div class="chat-name">${escapeHtml(user.username)}</div>
-        <div class="chat-last-message">Start a conversation...</div>
-      </div>
-      <div class="chat-meta">
-        <div class="unread-count" style="display: none;">0</div>
-      </div>
-    `;
-    
-    chatItem.addEventListener('click', () => switchChat({
-      id: chatId,
-      name: user.username,
-      type: 'private',
-      userId: user.id
-    }));
-    
-    chatList.appendChild(chatItem);
-  }
-  
-  // Switch to this chat
-  switchChat({
-    id: chatId,
-    name: user.username,
-    type: 'private',
-    userId: user.id
-  });
+  showStatus('Приватные чаты отключены. Сообщения отправляются в общий чат.', 'info');
+  switchChat({ id: 1, name: 'General Chat', type: 'general' });
 }
 
 function switchChat(room) {
-  // Update active chat
+  // Force single general room
   document.querySelectorAll('.chat-item').forEach(item => {
     item.classList.remove('active');
   });
-  
-  const chatItem = document.querySelector(`[data-room-id="${room.id}"]`);
-  if (chatItem) {
-    chatItem.classList.add('active');
-  }
-  
-  // Update current room
-  currentRoom = room;
-  currentChatName.textContent = room.name;
-  currentChatStatus.textContent = room.type === 'private' ? 'Private conversation' : 'Public room';
-  
-  // Clear messages (in a real app, you'd load the chat history)
+  const generalItem = document.querySelector('[data-room-id="1"]');
+  if (generalItem) generalItem.classList.add('active');
+  currentRoom = { id: 1, name: 'General Chat', type: 'general' };
+  currentChatName.textContent = 'General Chat';
+  currentChatStatus.textContent = 'Public room';
   messagesDiv.innerHTML = '';
-  
-  // Request chat history from server
-  socket.emit('join_room', { roomId: room.id, roomType: room.type });
-  
-  showStatus(`Switched to ${room.name}`, 'info');
+  socket.emit('join_room', { roomId: 1, roomType: 'general' });
 }
 
 // Socket Event Handlers
@@ -850,18 +799,8 @@ if (themeToggle) {
 // New chat button handler
 if (newChatBtn) {
   newChatBtn.addEventListener('click', () => {
-  // For now, just show a simple prompt
-  const username = prompt('Enter username to start a private chat:');
-  if (username && username.trim()) {
-    const user = Array.from(onlineUsers.values()).find(u => 
-      u.username.toLowerCase() === username.trim().toLowerCase()
-    );
-    if (user) {
-      startPrivateChat(user);
-    } else {
-      showStatus('User not found or not online', 'error');
-    }
-  }
+    showStatus('Доступен только общий чат', 'info');
+    switchChat({ id: 1, name: 'General Chat', type: 'general' });
   });
 }
 
