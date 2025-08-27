@@ -582,12 +582,31 @@ io.on('connection', (socket) => {
         }
         
         try {
-            const userData = JSON.parse(Buffer.from(token, 'base64').toString());
+            let userData = null;
+            // Support both Base64 tokens and JWTs
+            if (typeof token === 'string' && token.split('.').length === 3) {
+                try {
+                    const jwt = require('jsonwebtoken');
+                    userData = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+                } catch (_) {
+                    // If JWT verification fails, fall back to base64 parsing
+                    userData = JSON.parse(Buffer.from(token, 'base64').toString());
+                }
+            } else {
+                userData = JSON.parse(Buffer.from(token, 'base64').toString());
+            }
             
-            // Find user in database
+            // Prefer lookup by id/userId if present, otherwise by username
+            const lookupId = userData.userId || userData.id;
+            const lookupUsername = userData.username;
+            const querySql = lookupId
+                ? 'SELECT id, username, email, avatar_url, email_verified FROM users WHERE id = ?'
+                : 'SELECT id, username, email, avatar_url, email_verified FROM users WHERE username = ?';
+            const queryParam = lookupId ? [lookupId] : [lookupUsername];
+
             db.get(
-                'SELECT id, username, email, avatar_url, email_verified FROM users WHERE username = ?',
-                [userData.username],
+                querySql,
+                queryParam,
                 (err, user) => {
                     if (err) {
                         socket.emit('token_auth_error', { error: 'Database error' });
@@ -657,6 +676,8 @@ io.on('connection', (socket) => {
         if (!userInfo) return;
         
         const { roomId } = data;
+        // Coerce to numeric general room if invalid (private rooms not yet supported in DB)
+        const numericRoomId = Number.isFinite(Number(roomId)) ? Number(roomId) : 1;
         
         // Leave current room
         if (userInfo.roomId) {
@@ -664,8 +685,8 @@ io.on('connection', (socket) => {
         }
         
         // Join new room
-        socket.join(`room_${roomId}`);
-        userInfo.roomId = roomId;
+        socket.join(`room_${numericRoomId}`);
+        userInfo.roomId = numericRoomId;
         
         // Get recent messages
         db.all(
@@ -675,11 +696,11 @@ io.on('connection', (socket) => {
              WHERE m.room_id = ? 
              ORDER BY m.timestamp DESC 
              LIMIT 50`,
-            [roomId],
+            [numericRoomId],
             (err, messages) => {
                 socket.emit('room_joined', {
                     success: true,
-                    roomId: roomId,
+                    roomId: numericRoomId,
                     messages: messages ? messages.reverse() : []
                 });
             }
@@ -692,7 +713,8 @@ io.on('connection', (socket) => {
         if (!userInfo) return;
         
         const { content, roomId } = data;
-        const targetRoomId = roomId || userInfo.roomId || 1;
+        // Coerce to numeric room; default to general room
+        const targetRoomId = Number.isFinite(Number(roomId || userInfo.roomId)) ? Number(roomId || userInfo.roomId) : 1;
         
         if (!content || content.trim().length === 0) return;
         
